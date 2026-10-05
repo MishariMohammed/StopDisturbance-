@@ -2,15 +2,20 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { getBoss, QUEUES, type SyncJob } from "@/lib/jobs/queue";
 import { incrementalSync, initialSync } from "@/lib/mail/gmail-sync";
+import { outlookIncrementalSync, outlookInitialSync } from "@/lib/mail/outlook-sync";
 import { ReconnectRequiredError } from "@/lib/mail/accounts";
 
 async function runSync(job: SyncJob, mode: "initial" | "incremental") {
   const account = await db.mailAccount.findUnique({ where: { id: job.accountId } });
   if (!account || account.status !== "ACTIVE") return;
-  if (account.provider !== "GOOGLE") return; // Outlook sync arrives in M2
   try {
-    if (mode === "initial") await initialSync(account.id);
-    else await incrementalSync(account.id);
+    if (account.provider === "GOOGLE") {
+      if (mode === "initial") await initialSync(account.id);
+      else await incrementalSync(account.id);
+    } else {
+      if (mode === "initial") await outlookInitialSync(account.id);
+      else await outlookIncrementalSync(account.id);
+    }
   } catch (err) {
     if (err instanceof ReconnectRequiredError) {
       logger.warn({ accountId: account.id }, "mailbox needs reconnect");

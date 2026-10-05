@@ -23,7 +23,7 @@ export default async function ConnectPage({
       <h1 className="text-2xl font-semibold">{t("title")}</h1>
       <p className="mt-2 text-sm opacity-80">{t("lead")}</p>
 
-      {sp.error && <p role="alert" className="mt-4 rounded-md border border-red-400 p-3 text-sm">{t("error", { reason: sp.error })}</p>}
+      {sp.error && <p role="alert" className="mt-4 rounded-md border border-red-400 p-3 text-sm">{t.has(`errors.${sp.error}`) ? t(`errors.${sp.error}` as "errors.connect_failed") : t("errors.connect_failed")}</p>}
       {sp.partial && <p role="status" className="mt-4 rounded-md border p-3 text-sm">{t("partial")}</p>}
 
       <ul className="mt-8 flex flex-col gap-3">
@@ -52,7 +52,7 @@ export default async function ConnectPage({
 
       <div className="mt-6 flex flex-wrap gap-3">
         <a href={`/api/mail/google/start?locale=${locale}`} className="rounded-md bg-brand px-4 py-3 text-brand-ink">{t("gmail")}</a>
-        <span aria-disabled="true" className="rounded-md border px-4 py-3 opacity-50">{t("outlook")}</span>
+        <a href={`/api/mail/microsoft/start?locale=${locale}`} className="rounded-md border px-4 py-3">{t("outlook")}</a>
       </div>
     </main>
   );
