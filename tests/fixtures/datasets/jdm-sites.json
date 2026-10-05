@@ -1,0 +1,30 @@
+[
+    {
+        "name": "Spotify",
+        "url": "https://support.spotify.com/article/close-account/",
+        "difficulty": "medium",
+        "notes": "Contact customer support to close the account.",
+        "domains": ["spotify.com", "open.spotify.com"]
+    },
+    {
+        "name": "Store KSA",
+        "url": "https://store.com.sa/account/delete",
+        "difficulty": "easy",
+        "domains": ["store.com.sa"]
+    },
+    {
+        "name": "Shopco",
+        "url": "https://help.shopco.com/delete-account",
+        "difficulty": "hard",
+        "email": "Support@Shopco.com"
+    },
+    {
+        "name": "Missing URL",
+        "difficulty": "impossible"
+    },
+    {
+        "name": "Gmail (free-mail, never a brand)",
+        "url": "https://myaccount.google.com/delete-services-or-account",
+        "domains": ["gmail.com"]
+    }
+]

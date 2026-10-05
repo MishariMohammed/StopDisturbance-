@@ -1,0 +1,72 @@
+{
+  "_comment": "Hosted privacy-request (DSAR) portal vendors (01-research §2.3). `links`: regexes (case-insensitive) tested against absolute https URLs found in <a href>, <form action> and <iframe src> on a privacy-policy page; a match is a WEB_FORM contact. `scripts`: regexes tested against <script src>; a match only records a hint (it may be a cookie banner, not a request form). verified=false means the pattern comes from vendor docs or observation and should be re-checked [VERIFY].",
+  "vendors": [
+    {
+      "id": "onetrust",
+      "name": "OneTrust",
+      "verified": true,
+      "links": [
+        "^https://privacyportal(-[a-z]{2,4})?\\.onetrust\\.com/webform/",
+        "^https://[a-z0-9-]+-privacy\\.my\\.onetrust\\.(com|eu)/",
+        "^https://[a-z0-9-]+\\.my\\.onetrust\\.(com|eu)/webform/"
+      ],
+      "scripts": ["^https://cdn\\.cookielaw\\.org/", "^https://[a-z0-9-]+\\.onetrust\\.com/"]
+    },
+    {
+      "id": "trustarc",
+      "name": "TrustArc",
+      "verified": true,
+      "links": ["^https://submit-irm\\.trustarc\\.com/", "^https://[a-z0-9-]+\\.trustarc\\.com/.*(irm|dsar|request)"],
+      "scripts": ["^https://consent\\.trustarc\\.com/"]
+    },
+    {
+      "id": "transcend",
+      "name": "Transcend",
+      "verified": false,
+      "links": ["^https://[a-z0-9-]+\\.privacy\\.transcend\\.io/", "^https://privacy\\.[a-z0-9.-]+/(privacy-requests|request-privacy|take-control)"],
+      "scripts": ["^https://transcend-cdn\\.com/", "^https://cdn\\.transcend\\.io/"]
+    },
+    {
+      "id": "ketch",
+      "name": "Ketch",
+      "verified": false,
+      "links": ["^https://[a-z0-9-]+\\.ketch\\.com/.*(rights|request|privacy)", "^https://[a-z0-9.-]+\\.ketchcdn\\.com/.*(rights|request)"],
+      "scripts": ["^https://global\\.ketchcdn\\.com/"]
+    },
+    {
+      "id": "datagrail",
+      "name": "DataGrail",
+      "verified": true,
+      "links": ["^https://preferences\\.datagrail\\.io/", "^https://[a-z0-9-]+\\.datagrail\\.io/.*(request|privacy)"],
+      "scripts": ["^https://api\\.consentjs\\.datagrail\\.io/"]
+    },
+    {
+      "id": "securiti",
+      "name": "Securiti",
+      "verified": true,
+      "links": ["^https://privacy-central\\.securiti\\.ai/", "^https://[a-z0-9-]+\\.securiti\\.ai/.*#/dsr/"],
+      "scripts": ["^https://cdn-prod\\.securiti\\.ai/"]
+    },
+    {
+      "id": "osano",
+      "name": "Osano",
+      "verified": false,
+      "links": ["^https://my\\.datasubject\\.com/"],
+      "scripts": ["^https://cmp\\.osano\\.com/"]
+    },
+    {
+      "id": "wirewheel",
+      "name": "WireWheel",
+      "verified": false,
+      "links": ["^https://[a-z0-9-]+\\.wirewheel\\.io/"],
+      "scripts": []
+    },
+    {
+      "id": "truyo",
+      "name": "Truyo",
+      "verified": false,
+      "links": ["^https://[a-z0-9-]+\\.truyo\\.com/"],
+      "scripts": []
+    }
+  ]
+}

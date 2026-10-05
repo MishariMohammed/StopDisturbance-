@@ -61,14 +61,47 @@ export const classifySendersPayload = z
 export type ClassifySendersInput = z.input<typeof classifySendersInput>;
 export type ClassifySendersPayload = z.infer<typeof classifySendersPayload>;
 
-type Kinds = { classifySenders: { input: ClassifySendersInput; payload: ClassifySendersPayload } };
+// extractContact (00-brief §8 item 2): a public privacy-policy page, stripped to text. Nothing from the mailbox.
+export const EXTRACT_CONTACT_MAX_CHARS = 20_000;
+
+const httpsUrlSchema = z
+  .string()
+  .max(2048)
+  .url()
+  .refine((u) => u.startsWith("https://"), "https URL expected");
+
+const extractContactInput = z
+  .object({
+    domain: domainSchema,
+    policyUrl: httpsUrlSchema,
+    policyText: z.string().max(5_000_000),
+  })
+  .strict();
+
+export const extractContactPayload = z
+  .object({
+    domain: domainSchema,
+    policyUrl: httpsUrlSchema.refine((u) => !/[?#]/.test(u), "no query or fragment"),
+    policyText: z.string().min(1).max(EXTRACT_CONTACT_MAX_CHARS),
+  })
+  .strict();
+
+export type ExtractContactInput = z.input<typeof extractContactInput>;
+export type ExtractContactPayload = z.infer<typeof extractContactPayload>;
+
+type Kinds = {
+  classifySenders: { input: ClassifySendersInput; payload: ClassifySendersPayload };
+  extractContact: { input: ExtractContactInput; payload: ExtractContactPayload };
+};
 export type PayloadKind = keyof Kinds;
 
 export type PayloadContext = RedactContext;
 
 /**
  * Builds the minimised payload for an LLM call. Throws on any field not listed in 00-brief §8.
- * Redaction: digits ≥4, emails, URLs, owner names → placeholders; sensitive subjects dropped.
+ * classifySenders redaction: digits ≥4, emails, URLs, owner names → placeholders; sensitive subjects dropped.
+ * extractContact: public page text only (not redacted: the emails in it are what we extract), ≤20k chars,
+ * policy URL without query/fragment.
  */
 export function buildLlmPayload<K extends PayloadKind>(kind: K, input: Kinds[K]["input"], ctx: PayloadContext): Kinds[K]["payload"] {
   switch (kind) {
@@ -92,7 +125,19 @@ export function buildLlmPayload<K extends PayloadKind>(kind: K, input: Kinds[K][
           };
         }),
       };
-      return classifySendersPayload.parse(payload);
+      return classifySendersPayload.parse(payload) as Kinds[K]["payload"];
+    }
+    case "extractContact": {
+      const parsed = extractContactInput.parse(input);
+      const url = new URL(parsed.policyUrl);
+      url.search = "";
+      url.hash = "";
+      const text = parsed.policyText.replace(/\s+/g, " ").trim();
+      return extractContactPayload.parse({
+        domain: parsed.domain,
+        policyUrl: url.href,
+        policyText: text.slice(0, EXTRACT_CONTACT_MAX_CHARS).replace(/[\uD800-\uDBFF]$/, ""),
+      }) as Kinds[K]["payload"];
     }
     default:
       throw new Error(`Unknown LLM payload kind: ${String(kind)}`);
