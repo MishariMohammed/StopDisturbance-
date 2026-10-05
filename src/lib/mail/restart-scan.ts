@@ -24,3 +24,9 @@ export async function restartScan(accountId: string, range: ScanRange, now = new
   await enqueueInitialSync(accountId);
   return { scanFrom };
 }
+
+/** True when the mailbox's scanFrom is no longer the one a running initial sync started with. */
+export async function scanRangeChanged(accountId: string, startedWith: Date): Promise<boolean> {
+  const now = await db.mailAccount.findUnique({ where: { id: accountId }, select: { scanFrom: true } });
+  return !!now && now.scanFrom.getTime() !== startedWith.getTime();
+}

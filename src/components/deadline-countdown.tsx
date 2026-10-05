@@ -5,7 +5,10 @@ import { formatDate, formatHijri, formatNumber } from "@/lib/format";
 const BAR: Record<string, string> = { info: "bg-info", warning: "bg-warning", danger: "bg-danger" };
 const TEXT: Record<string, string> = { info: "text-text", warning: "text-warning", danger: "text-danger" };
 
-/** Text-first deadline (04-ux §7.2); the bar fills from the start side and only repeats the text. */
+/**
+ * Text-first deadline (04-ux §7.2); the bar fills from the start side and only repeats the text.
+ * `data-volatile` marks content that changes with the current time (visual tests mask it).
+ */
 export function DeadlineCountdown({
   dueAt,
   clockStart,
@@ -29,7 +32,7 @@ export function DeadlineCountdown({
   const date = formatDate(locale, dueAt);
   const text = v.overdue ? t("overdue", { count: n(-v.days), date }) : t("left", { count: n(v.days), date });
   return (
-    <span className="inline-flex flex-col gap-1">
+    <span data-volatile className="inline-flex flex-col gap-1">
       <span className={`text-sm font-medium ${TEXT[v.tone]}`}>
         {text}
         {businessDays && <span className="text-muted"> · {t("businessDays")}</span>}

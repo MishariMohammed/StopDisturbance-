@@ -118,8 +118,8 @@ export default async function TrackerPage({
                       {r.bounced && <span className="rounded-sm border border-danger px-1.5 text-xs text-danger">{t("flags.bounced")}</span>}
                     </div>
                     <p className="mt-1 flex flex-wrap items-start gap-x-4 gap-y-1 text-sm text-muted">
-                      {r.clockStart && <span>{t("sent", { date: formatDate(locale, r.clockStart) })}</span>}
-                      {r.lastReplyAt && <span>{t("lastReply", { date: formatDate(locale, r.lastReplyAt) })}</span>}
+                      {r.clockStart && <span data-volatile>{t("sent", { date: formatDate(locale, r.clockStart) })}</span>}
+                      {r.lastReplyAt && <span data-volatile>{t("lastReply", { date: formatDate(locale, r.lastReplyAt) })}</span>}
                       {tracked && (
                         <DeadlineCountdown
                           dueAt={r.dueAt!.toISOString()}

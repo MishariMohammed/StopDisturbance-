@@ -27,7 +27,7 @@ const noPhysicalDirection = {
 };
 
 const config = [
-  { ignores: [".next/**", "dist/**", "node_modules/**", "next-env.d.ts"] },
+  { ignores: [".next/**", ".next-*/**", "dist/**", "node_modules/**", "next-env.d.ts"] },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     plugins: { sd: { rules: { "no-physical-direction": noPhysicalDirection } } },

@@ -1,5 +1,7 @@
 node_modules/
 .next/
+.next-*/
+tsconfig.e2e.json
 dist/
 *.tsbuildinfo
 next-env.d.ts

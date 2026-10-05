@@ -12,6 +12,7 @@ import {
   type GmailMessageMeta,
 } from "@/lib/mail/gmail";
 import { parseHeaders } from "@/lib/mail/headers";
+import { scanRangeChanged } from "@/lib/mail/restart-scan";
 import { isEverything } from "@/lib/mail/scan-range";
 
 export type GmailCursor = { historyId: string };
@@ -133,6 +134,12 @@ export async function initialSync(accountId: string) {
     pageToken = page.nextPageToken;
   } while (pageToken);
 
+  // The range was changed while this scan ran (restartScan's enqueue collapses into the running job):
+  // start over with the new range instead of marking the old one done.
+  if (await scanRangeChanged(accountId, account.scanFrom)) {
+    logger.info({ accountId }, "gmail scan range changed during initial sync, restarting");
+    return initialSync(accountId);
+  }
   progress.phase = "done";
   const cursor: GmailCursor = { historyId: profile.historyId };
   await db.mailAccount.update({

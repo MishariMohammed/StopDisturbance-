@@ -497,7 +497,7 @@ function ChannelCard({ item, locale, edit, onTo, onConfirm, pending }: {
             aria-describedby="rcpt-src"
             className="mt-1 block min-h-tap w-full max-w-md rounded-md border border-border-strong bg-surface px-3"
           />
-          <p id="rcpt-src" className="mt-1 text-xs text-muted">
+          <p id="rcpt-src" data-volatile className="mt-1 text-xs text-muted">
             {item.contact
               ? t("recipient.source", {
                   source: t.has(`recipient.sources.${item.contact.source}` as "recipient.sources.manual") ? t(`recipient.sources.${item.contact.source}` as "recipient.sources.manual") : item.contact.source,

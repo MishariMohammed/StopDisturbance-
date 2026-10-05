@@ -120,7 +120,7 @@ export function NextActionView({ action, ctx, locale }: { action: Plain<NextActi
       break;
     case "SEND_REMINDER":
       body = later ? (
-        <span className="text-sm">{t("reminderFrom", { date: formatDate(locale, later) })}</span>
+        <span data-volatile className="text-sm">{t("reminderFrom", { date: formatDate(locale, later) })}</span>
       ) : (
         <button type="button" disabled={pending} onClick={() => followUp("REMINDER")} className={primary}>
           {t("action.SEND_REMINDER")}
@@ -130,7 +130,7 @@ export function NextActionView({ action, ctx, locale }: { action: Plain<NextActi
       break;
     case "ESCALATE":
       body = later ? (
-        <span className="text-sm">{t("availableFrom", { date: formatDate(locale, later) })}</span>
+        <span data-volatile className="text-sm">{t("availableFrom", { date: formatDate(locale, later) })}</span>
       ) : ctx.onDetail && ctx.onEscalate ? (
         <button type="button" aria-haspopup="dialog" onClick={ctx.onEscalate} className={primary}>
           {t("action.ESCALATE", { regulator: ctx.regulator })}
@@ -171,7 +171,7 @@ export function NextActionView({ action, ctx, locale }: { action: Plain<NextActi
       );
       break;
     default:
-      body = <span className="text-sm">{later ? t("availableFrom", { date: formatDate(locale, later) }) : ctx.closed ? t("action.NONE") : t("action.WAIT")}</span>;
+      body = <span data-volatile={later ? "" : undefined} className="text-sm">{later ? t("availableFrom", { date: formatDate(locale, later) }) : ctx.closed ? t("action.NONE") : t("action.WAIT")}</span>;
   }
 
   return (

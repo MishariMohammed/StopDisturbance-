@@ -157,6 +157,27 @@ describe("scan range (04-ux §3.2)", () => {
     expect(await db.messageHeader.count({ where: { providerMsgId: "m1" } })).toBe(1);
   });
 
+  it("a range change while the initial sync runs restarts it with the new range instead of finishing the old one", async () => {
+    const account = await makeAccount();
+    let lists = 0;
+    const m = mockFetch([
+      [/\/profile$/, () => json({ emailAddress: "owner@gmail.com", historyId: "100" })],
+      [/\/messages\?/, async () => {
+        // The owner picks "Everything" mid-scan; the queued job collapses into this running one.
+        if (lists++ === 0) await restartScan(account.id, "all", NOW);
+        return json({ messages: [{ id: "m1" }] });
+      }],
+      [/\/messages\/\w+\?/, (u) => json(byId[u.pathname.split("/").pop()!])],
+    ]);
+    vi.stubGlobal("fetch", m.fn);
+    await initialSync(account.id);
+    const listCalls = m.calls.filter((u) => /\/messages$/.test(u.pathname));
+    expect(listCalls.map((u) => u.searchParams.get("q"))).toEqual(["newer_than:3y", null]);
+    const acc = await db.mailAccount.findUniqueOrThrow({ where: { id: account.id } });
+    expect(acc.scanProgress).toMatchObject({ phase: "done" });
+    expect(await db.messageHeader.count({ where: { providerMsgId: "m1" } })).toBe(1);
+  });
+
   it("restartScan refuses a mailbox that needs reconnecting", async () => {
     const account = await makeAccount();
     await db.mailAccount.update({ where: { id: account.id }, data: { status: "NEEDS_RECONNECT" } });

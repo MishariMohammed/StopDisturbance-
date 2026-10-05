@@ -475,7 +475,8 @@ function CompanyItem({
             <ConfidenceMeter value={row.confidence} />
           </div>
           <p className="mt-1 text-sm text-muted">
-            {t("emails", { count: formatNumber(locale, row.emailCount) })} · {formatDate(locale, row.firstSeen, "month")} → {formatDate(locale, row.lastSeen)}
+            {t("emails", { count: formatNumber(locale, row.emailCount) })} ·{" "}
+            <span data-volatile>{formatDate(locale, row.firstSeen, "month")} → {formatDate(locale, row.lastSeen)}</span>
           </p>
           {row.subjects.length > 0 && (
             <p className="mt-1 truncate text-sm">
@@ -598,7 +599,7 @@ function EvidenceDrawer({
         <dt className="font-semibold">{t("emails")}</dt>
         <dd>{n(row.emailCount)}</dd>
         <dt className="font-semibold">{t("seen")}</dt>
-        <dd>
+        <dd data-volatile>
           {formatDate(locale, row.firstSeen)} → {formatDate(locale, row.lastSeen)}
         </dd>
         <dt className="font-semibold">{t("mailboxes")}</dt>

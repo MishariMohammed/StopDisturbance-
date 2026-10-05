@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { seed } from "./seed";
 
 export async function reseed() {
@@ -16,6 +18,26 @@ export async function reseed() {
  */
 export async function waitForHydration(page: Page) {
   await expect(page.locator("html[data-hydrated]")).toHaveCount(1);
+}
+
+/** The app's message catalogue for a locale (tests assert on the real strings in both languages). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function messages(locale: "ar" | "en"): any {
+  return JSON.parse(readFileSync(path.join(process.cwd(), "messages", `${locale}.json`), "utf8"));
+}
+
+/**
+ * Moves focus with Tab (or Shift+Tab) until `target`, or an element inside it, has focus. Proves the
+ * control is reachable by keyboard in the real tab order; fails after `max` presses.
+ */
+export async function tabTo(page: Page, target: Locator, { back = false, max = 400 }: { back?: boolean; max?: number } = {}) {
+  await expect(target.first()).toBeVisible();
+  for (let i = 0; i < max; i++) {
+    await page.keyboard.press(back ? "Shift+Tab" : "Tab");
+    const hit = await target.evaluateAll((els) => els.some((el) => el === document.activeElement || el.contains(document.activeElement)));
+    if (hit) return;
+  }
+  throw new Error(`Could not reach ${target} with ${back ? "Shift+Tab" : "Tab"} in ${max} presses`);
 }
 
 /** page.goto + waitForHydration. */

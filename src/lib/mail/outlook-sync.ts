@@ -6,6 +6,7 @@ import { microsoftAccessTokenById } from "@/lib/mail/accounts";
 import type { ScanProgress } from "@/lib/mail/gmail-sync";
 import { GraphDeltaExpiredError, GraphNotFoundError, graphBatch, graphFetch } from "@/lib/mail/graph";
 import { hashAddress, parseHeaders, type RawHeader } from "@/lib/mail/headers";
+import { scanRangeChanged } from "@/lib/mail/restart-scan";
 
 export const OUTLOOK_FOLDERS = ["inbox", "junkemail", "archive", "sentitems"] as const;
 export type OutlookFolder = (typeof OUTLOOK_FOLDERS)[number];
@@ -232,11 +233,16 @@ async function runFolders(accountId: string, cursor: OutlookCursor | null, opts:
       lastSyncAt: new Date(),
     },
   });
-  return { progress, resynced };
+  return { progress, resynced, scanFrom: account.scanFrom };
 }
 
-export async function outlookInitialSync(accountId: string, opts: SyncOpts = {}) {
-  const { progress } = await runFolders(accountId, null, { ...opts, trackProgress: true });
+export async function outlookInitialSync(accountId: string, opts: SyncOpts = {}): Promise<ScanProgress> {
+  const { progress, scanFrom } = await runFolders(accountId, null, { ...opts, trackProgress: true });
+  // The range was changed while this scan ran (see restartScan): scan again with the new range.
+  if (await scanRangeChanged(accountId, scanFrom)) {
+    logger.info({ accountId }, "outlook scan range changed during initial sync, restarting");
+    return outlookInitialSync(accountId, opts);
+  }
   logger.info({ accountId, listed: progress.listed }, "outlook initial sync done");
   return progress;
 }
