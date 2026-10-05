@@ -11,9 +11,9 @@ Specs live in `docs/`. Start with `docs/00-brief.md`.
 | M1 Skeleton, owner login, Gmail sync | done |
 | M2 Outlook, resolve, classify | done |
 | M3 Company list UI | done |
-| M4 Contacts, jurisdiction, drafts, review | backend done, /review page next |
-| M5 Send, unsubscribe, tracker | |
-| M6 Hardening | |
+| M4 Contacts, jurisdiction, drafts, review | done |
+| M5 Send, unsubscribe, tracker | done |
+| M6 Hardening | done (live checks pending, see docs/RUNBOOK.md) |
 
 ## Local development
 
@@ -23,7 +23,8 @@ openssl rand -base64 32         # put the output in TOKEN_ENC_KEYS {"1": "..."}
 npx prisma migrate deploy
 npm run dev                     # web on :3000
 npm run worker:dev              # background jobs
-npm test                        # needs Postgres at TEST_DATABASE_URL (default sd:sd@localhost/stopdisturbance_test)
+npm test                        # 405 unit/integration tests; needs Postgres at TEST_DATABASE_URL (default sd:sd@localhost/stopdisturbance_test)
+npx playwright test             # 71 e2e tests (ar/en, axe, keyboard journey, screenshots)
 ```
 
 ## Deploying (Railway)
