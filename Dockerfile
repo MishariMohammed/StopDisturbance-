@@ -20,6 +20,7 @@ COPY --from=build /app/.next ./.next
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/messages ./messages
+COPY --from=build /app/templates ./templates
 COPY --from=build /app/next.config.ts ./
 EXPOSE 3000
 # The web service runs migrations first. The worker service overrides this with `npm run worker`.

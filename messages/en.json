@@ -31,6 +31,359 @@
       "no_id_token": "Microsoft didn't confirm your identity. Try again.",
       "no_address": "Couldn't read the mailbox address.",
       "connect_failed": "Something went wrong while connecting. Try again."
+    },
+    "h1": "Find who has your data. Ask them to delete it.",
+    "sub": "You approve every message before it's sent.",
+    "cancelled": "No problem — nothing was connected.",
+    "microsoftNote": "Microsoft may show that the app is unverified. That's expected for your own private app; check the app name is yours before accepting.",
+    "connectedTitle": "Connected mailboxes",
+    "none": "None yet.",
+    "scopeRead": "Read headers",
+    "scopeSend": "Send",
+    "limited": "Limited access",
+    "partialRow": "We can scan but can't send yet. We'll ask for send permission before your first request.",
+    "grantSend": "Grant send permission",
+    "reconnect": "Reconnect",
+    "continue": "Continue to scan",
+    "continueHelp": "Connect at least one mailbox.",
+    "interstitial": {
+      "title": "Heads up: Google will show a warning",
+      "body1": "This is your own app, so Google hasn't reviewed it. Google will say “Google hasn't verified this app”.",
+      "body2": "Check that the app name and developer email on the warning match YOUR Google Cloud project before continuing.",
+      "body3": "To continue: choose “Advanced”, then “Go to StopDisturbance (unsafe)”.",
+      "revoke": "You can remove access at any time at",
+      "notNow": "Not now",
+      "continue": "Continue to Google"
+    },
+    "setup": {
+      "title": "First-run setup",
+      "lead": "About a minute. You can change all of this later in Settings.",
+      "invalid": "Please enter your name and pick a country.",
+      "language": "Language",
+      "name": "Your name as companies know you",
+      "nameHelp": "Used in the letters we draft for you. Companies use it to find your records.",
+      "country": "Country you live in",
+      "ai": "AI assist",
+      "aiRules": "Rules only, no AI — nothing is sent to DeepSeek.",
+      "aiDeepseek": "DeepSeek (your API key)",
+      "aiGate": "DeepSeek can be turned on only after you confirm its training opt-out in",
+      "aiSettings": "Settings",
+      "save": "Save and continue",
+      "saved": "Saved. Next, connect a mailbox."
+    },
+    "consent": {
+      "doTitle": "What we'll do",
+      "do1": "Read sender, subject and date of your emails (not the message body).",
+      "do2": "Send the requests you approve, from your address.",
+      "do3": "Watch for replies to those requests only (we open the body of those replies, nothing else).",
+      "storeTitle": "We store",
+      "store": "Company names, email counts and dates, up to 3 subject lines per company, and the requests you send.",
+      "neverTitle": "We never",
+      "never": "Read email bodies to scan, sell your data, or send anything you didn't approve."
+    },
+    "ai": {
+      "title": "How we use AI",
+      "body": "When AI assist is on, the app sends these to DeepSeek using your API key: sender display names, sender domains, up to 3 redacted subject lines per company and header flags (for grouping and tagging), and public privacy-policy text (to find contact addresses). Letters are written from templates on this server; your name, email, message bodies, your other contacts and OAuth tokens are never sent. DeepSeek's own terms decide how they store API data. Switch to “Rules only” to send nothing."
+    },
+    "scopes": {
+      "title": "Exactly which permissions & why",
+      "scope": "Permission",
+      "meaning": "What it lets the app do",
+      "googleProfile": {
+        "name": "Google openid email profile",
+        "text": "Your name and email address, to create your account."
+      },
+      "gmailRead": {
+        "name": "Google gmail.readonly",
+        "text": "Read your email. We can technically read message bodies, but we don't: the scan reads only sender, subject and date. We open only the replies to requests you sent, to show them to you."
+      },
+      "gmailSend": {
+        "name": "Google gmail.send",
+        "text": "Send the requests you approve, from your own address. Nothing else."
+      },
+      "msRead": {
+        "name": "Microsoft Mail.Read",
+        "text": "Same as above for Outlook: headers only for the scan; we open only replies to your requests."
+      },
+      "msSend": {
+        "name": "Microsoft Mail.Send",
+        "text": "Send approved requests from your address."
+      },
+      "msOffline": {
+        "name": "Microsoft offline_access",
+        "text": "Keep watching for replies when you're not on the site."
+      }
+    }
+  },
+  "nav": {
+    "label": "Main",
+    "connect": "Connect",
+    "scan": "Scan",
+    "companies": "Companies",
+    "review": "Review",
+    "tracker": "Tracker",
+    "settings": "Settings",
+    "soon": "coming soon",
+    "help": "What we can see",
+    "skip": "Skip to content"
+  },
+  "countries": {
+    "SA": "Saudi Arabia",
+    "AE": "United Arab Emirates",
+    "KW": "Kuwait",
+    "QA": "Qatar",
+    "BH": "Bahrain",
+    "OM": "Oman",
+    "EG": "Egypt",
+    "JO": "Jordan",
+    "GB": "United Kingdom",
+    "IE": "Ireland",
+    "DE": "Germany",
+    "FR": "France",
+    "US": "United States",
+    "OTHER": "Other"
+  },
+  "scan": {
+    "title": "Scanning your mailboxes",
+    "titleDone": "Scan complete",
+    "leave": "You can close this page — scanning continues in the background.",
+    "noAccounts": "No mailbox connected yet.",
+    "connectLink": "Connect a mailbox",
+    "accounts": "Mailboxes",
+    "reconnect": "Access was removed. Reconnect it on the Connect page.",
+    "accountDone": "Done: {count} emails checked",
+    "waiting": "Waiting to start…",
+    "checked": "{count} checked",
+    "progress": "{fetched} / {listed} ({percent}%)",
+    "foundSoFar": "Found so far",
+    "summaryTitle": "Summary",
+    "tally": "Companies: {companies} · send you ads: {ads} · hold your data: {data}",
+    "recent": "Latest:",
+    "stale": "Couldn't refresh. Retrying…",
+    "seeSoFar": "See results so far",
+    "cta": "Choose who to contact"
+  },
+  "companies": {
+    "title": "Companies found: {count}",
+    "lead": "Decide for each company. Nothing is sent from this page.",
+    "stillScanning": "Still scanning — the list will grow.",
+    "stillScanningPct": "Still scanning — the list will grow ({percent}%).",
+    "emptyScan": "We didn't find marketing or account emails yet.",
+    "emptyFilter": "No companies match these filters.",
+    "selectAll": "Select all {count} matching",
+    "selectNone": "Select none",
+    "dismiss": "Dismiss",
+    "selectRow": "Select {name}",
+    "decisionFor": "Decision for {name}",
+    "why": "Why it's here",
+    "emails": "{count} emails",
+    "recentWarning": "You had account or order emails from {name} in the last 90 days. Deleting your data may close your account and order history.",
+    "unsubInstead": "Unsubscribe only instead",
+    "decision": {
+      "KEEP": "Keep",
+      "UNSUBSCRIBE": "Unsubscribe only",
+      "REMOVE": "Remove my data"
+    },
+    "method": {
+      "RULES": "rule",
+      "LLM": "AI suggestion",
+      "MANUAL": "set by you"
+    },
+    "sections": {
+      "data": "Likely hold your data",
+      "marketing": "Marketing only",
+      "kept": "Kept"
+    },
+    "errors": {
+      "save": "Couldn't save your choice. Please try again.",
+      "merge": "Couldn't merge these companies.",
+      "split": "Couldn't split this domain."
+    },
+    "bulk": {
+      "label": "Bulk actions",
+      "selected": "{count} selected",
+      "done": "Marked {count} as “{decision}”.",
+      "skippedLow": "{count} low-confidence companies skipped — review them individually.",
+      "noneEligible": "{count} low-confidence companies skipped — review them individually. Nothing was marked.",
+      "clear": "Clear selection",
+      "mark": {
+        "REMOVE": "Mark Remove",
+        "UNSUBSCRIBE": "Mark Unsubscribe",
+        "KEEP": "Mark Keep"
+      }
+    },
+    "confirm": {
+      "title": "Mark {count} companies as “Remove my data”?",
+      "body": "This includes {names} and others ({count} in total).",
+      "note": "This only marks them. Nothing is sent until you review and approve each request.",
+      "cancel": "Cancel",
+      "ok": "Mark {count} as Remove"
+    },
+    "merge": {
+      "open": "Merge {count} into one",
+      "done": "Merged {count} companies into {name}.",
+      "title": "Merge {count} companies into one",
+      "lead": "Use this when the same company appears more than once. All their domains and emails move to the one you keep.",
+      "keepName": "Keep this company",
+      "cancel": "Cancel",
+      "submit": "Merge {count} into one"
+    },
+    "split": {
+      "done": "{domain} is now listed as its own company."
+    },
+    "confidence": {
+      "HIGH": "High",
+      "MEDIUM": "Medium",
+      "LOW": "Low",
+      "def": {
+        "HIGH": "3 or more independent signals agree",
+        "MEDIUM": "2 signals agree",
+        "LOW": "1 signal or a fuzzy name match"
+      }
+    },
+    "badge": {
+      "ads": "Ads",
+      "data": "Holds data",
+      "ai": "AI suggestion"
+    },
+    "drawer": {
+      "close": "Close",
+      "why": "Why it's here",
+      "accountMail": "Order or account emails ({count})",
+      "marketingMail": "Marketing emails ({count})",
+      "emails": "Emails",
+      "seen": "Seen",
+      "mailboxes": "Mailboxes",
+      "confidence": "Confidence",
+      "subjects": "Example subjects",
+      "noSubjects": "No subject lines kept.",
+      "domains": "Domains",
+      "split": "Split out",
+      "groupingHelp": "Wrong grouping? Split a domain out here, or select companies in the list and merge them.",
+      "decision": "Your decision"
+    },
+    "filters": {
+      "label": "Filters",
+      "search": "Search company or domain",
+      "searchPlaceholder": "e.g. noon or نون",
+      "categories": "Category",
+      "cat": {
+        "all": "All",
+        "ads": "Ads",
+        "data": "Holds data",
+        "both": "Both"
+      },
+      "decision": "Decision",
+      "decisionOpt": {
+        "all": "Any",
+        "undecided": "Undecided",
+        "remove": "Remove",
+        "unsubscribe": "Unsubscribe",
+        "keep": "Keep"
+      },
+      "confidence": "Confidence",
+      "confidenceOpt": {
+        "all": "Any",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "seen": "Last seen",
+      "seenOpt": {
+        "all": "Any time",
+        "30d": "Last 30 days",
+        "1y": "Last year",
+        "older": "Over a year ago"
+      },
+      "mailbox": "Mailbox",
+      "allMailboxes": "All mailboxes",
+      "sort": "Sort",
+      "sortOpt": {
+        "emails": "Most emails",
+        "recent": "Most recent",
+        "oldest": "Oldest first seen",
+        "az": "A–Z"
+      },
+      "clear": "Clear filters"
+    }
+  },
+  "rules": {
+    "ONE_CLICK": "Has a one-click unsubscribe header",
+    "LIST_UNSUB": "Has a List-Unsubscribe header",
+    "LIST_ID": "Sent to a mailing list (List-Id)",
+    "FEEDBACK_ID": "Bulk-mail feedback header",
+    "PRECEDENCE_BULK": "Marked as bulk mail",
+    "GMAIL_PROMOTIONS": "In Gmail's Promotions tab",
+    "ESP_MARKETING": "Sent through a marketing email service",
+    "PROMO_SUBJECT": "Promotional subject lines",
+    "TXN_SUBJECT": "Order, account or booking subject lines",
+    "AUTO_SUBMITTED": "Automatic account notification",
+    "GMAIL_UPDATES": "In Gmail's Updates tab",
+    "TXN_ESP": "Sent through a transactional email service",
+    "OUTLOOK_OTHER": "In Outlook's Other inbox",
+    "NO_LIST_HEADERS": "No mailing-list headers (direct account mail)",
+    "AGG_MARKETING": "Marketing emails seen earlier",
+    "AGG_TRANSACTIONAL": "Account emails seen earlier",
+    "label": {
+      "ads": "Sends you ads",
+      "holds_data": "Holds your data"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "lead": "More settings (mailboxes, notifications, your data) arrive in later versions.",
+    "ai": {
+      "title": "AI assist",
+      "current": "Current mode:",
+      "rules": "Rules only",
+      "deepseek": "DeepSeek",
+      "mode": "Mode",
+      "rulesLong": "Rules only, no AI — nothing is sent to DeepSeek.",
+      "deepseekLong": "DeepSeek — your API key",
+      "gateTitle": "Training opt-out (required for DeepSeek)",
+      "gateHelp": "DeepSeek can be turned on only after you confirm you turned off “Improve the model” / training in your DeepSeek account, and when.",
+      "gateCheck": "I turned off training in my DeepSeek account",
+      "gateDate": "Date you turned it off",
+      "confirmedOn": "Confirmed opt-out date: {date}",
+      "key": "API key:",
+      "noKey": "not set (DEEPSEEK_API_KEY) — AI stays off until it is set",
+      "model": "Model:",
+      "save": "Save AI setting",
+      "outcome": {
+        "saved_rules": "Rules only — nothing will be sent to DeepSeek.",
+        "saved_deepseek": "DeepSeek is on. Your opt-out date is recorded.",
+        "opt_out_required": "DeepSeek stays off: tick the training opt-out confirmation first.",
+        "bad_date": "DeepSeek stays off: enter the date you turned training off (not in the future)."
+      },
+      "disclosureTitle": "What is sent to DeepSeek",
+      "sentTitle": "Sent",
+      "sent": "Sender display names · sender domains · up to 3 redacted subject lines per company · header flags · public privacy-policy text.",
+      "neverTitle": "Never sent",
+      "never": "Email bodies · attachments · your name, email or phone · other contacts · OAuth tokens · ID numbers · letters."
+    }
+  },
+  "whatWeSee": {
+    "title": "What we can see",
+    "lead": "This is your own private app. Here is exactly what it reads, keeps and never touches.",
+    "read": {
+      "title": "What we read",
+      "body": "For scanning: the sender, subject, date and list headers of your emails. Never message bodies. The only bodies we open are replies to requests you sent, so we can show them to you."
+    },
+    "store": {
+      "title": "What we store",
+      "body": "Company names, email counts and dates, up to 3 subject lines per company (deleted 90 days after the scan), your decisions and the requests you send. Mailbox access tokens are encrypted."
+    },
+    "never": {
+      "title": "What we never do",
+      "body": "Read email bodies to scan, sell or share your data, or send anything you didn't approve."
+    },
+    "ai": {
+      "title": "AI",
+      "body": "AI assist is off by default (Rules only). If you turn on DeepSeek in Settings, only sender names, domains, up to 3 redacted subjects per company, header flags and public privacy-policy text are sent."
+    },
+    "control": {
+      "title": "You stay in control",
+      "body": "Nothing is pre-selected and nothing is sent without your explicit approval. You can disconnect a mailbox or remove the app's access in your Google or Microsoft account at any time."
     }
   }
 }

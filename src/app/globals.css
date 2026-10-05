@@ -1,20 +1,158 @@
 @import "tailwindcss";
 
-/* Design tokens: full set from 04-ux §12 lands in M3. */
-@theme {
-  --color-brand: #0f766e;
-  --color-brand-ink: #ffffff;
-  --font-sans: "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif;
-}
-
-body {
-  background: #ffffff;
-  color: #111827;
+/* Design tokens (04-ux §12). RGB triplets so light/dark swap without dark: variants. */
+:root {
+  --bg: 248 250 251;
+  --surface: 255 255 255;
+  --surface-2: 241 245 247;
+  --border: 214 222 228;
+  --border-strong: 107 114 128; /* input borders: ≥3:1 on surface (WCAG 1.4.11) */
+  --text: 17 24 39;
+  --muted: 75 85 99;
+  --primary: 15 110 122; /* teal #0F6E7A, 5.8:1 on white */
+  --primary-fg: 255 255 255;
+  --focus: 37 99 235;
+  --info: 29 78 216;
+  --info-bg: 230 239 255;
+  --success: 21 128 61;
+  --success-bg: 226 245 233;
+  --warning: 146 84 6;
+  --warning-bg: 254 243 214;
+  --danger: 185 28 28;
+  --danger-bg: 254 230 230;
+  --escalated: 109 40 217;
+  --escalated-bg: 240 232 255;
+  --cat-ads: 194 65 12;
+  --cat-data: 3 105 161;
+  --cat-broker: 134 25 143;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  body {
-    background: #0b1220;
-    color: #e5e7eb;
+  :root:not(.light) {
+    --bg: 11 15 20;
+    --surface: 17 23 30;
+    --surface-2: 26 34 43;
+    --border: 51 62 74;
+    --border-strong: 120 134 150;
+    --text: 236 240 244;
+    --muted: 160 172 184;
+    --primary: 94 196 208;
+    --primary-fg: 6 30 34;
+    --focus: 125 168 255;
+    --info: 147 180 255;
+    --info-bg: 23 37 66;
+    --success: 110 210 145;
+    --success-bg: 18 46 30;
+    --warning: 240 190 90;
+    --warning-bg: 54 40 12;
+    --danger: 248 130 130;
+    --danger-bg: 60 20 20;
+    --escalated: 190 160 255;
+    --escalated-bg: 40 26 70;
+    --cat-ads: 251 146 90;
+    --cat-data: 110 190 240;
+    --cat-broker: 220 140 230;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: rgb(var(--bg));
+  --color-surface: rgb(var(--surface));
+  --color-surface-2: rgb(var(--surface-2));
+  --color-border: rgb(var(--border));
+  --color-border-strong: rgb(var(--border-strong));
+  --color-text: rgb(var(--text));
+  --color-muted: rgb(var(--muted));
+  --color-primary: rgb(var(--primary));
+  --color-primary-fg: rgb(var(--primary-fg));
+  --color-focus: rgb(var(--focus));
+  --color-info: rgb(var(--info));
+  --color-info-bg: rgb(var(--info-bg));
+  --color-success: rgb(var(--success));
+  --color-success-bg: rgb(var(--success-bg));
+  --color-warning: rgb(var(--warning));
+  --color-warning-bg: rgb(var(--warning-bg));
+  --color-danger: rgb(var(--danger));
+  --color-danger-bg: rgb(var(--danger-bg));
+  --color-escalated: rgb(var(--escalated));
+  --color-escalated-bg: rgb(var(--escalated-bg));
+  --color-cat-ads: rgb(var(--cat-ads));
+  --color-cat-data: rgb(var(--cat-data));
+  --color-cat-broker: rgb(var(--cat-broker));
+  /* M1 aliases */
+  --color-brand: rgb(var(--primary));
+  --color-brand-ink: rgb(var(--primary-fg));
+}
+
+@theme {
+  --font-sans: "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 2rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.375rem;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 2.875rem;
+
+  --spacing-4_5: 1.125rem;
+  --spacing-13: 3.25rem;
+  --spacing-18: 4.5rem;
+  --spacing-tap: 2.75rem;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.08);
+  --shadow-drawer: 0 8px 24px rgb(0 0 0 / 0.16);
+
+  --container-content: 75rem;
+  --container-prose: 42rem;
+}
+
+html {
+  /* Sticky bulk bar must not cover focused elements (WCAG 2.4.11). */
+  scroll-padding-bottom: 7rem;
+}
+
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+}
+
+:lang(ar) body {
+  font-family: var(--font-arabic);
+  line-height: 1.75;
+  letter-spacing: 0;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--focus));
+  outline-offset: 2px;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
