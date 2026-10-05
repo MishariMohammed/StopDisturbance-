@@ -7,6 +7,9 @@ export const QUEUES = {
   scanProcess: "scan.process",
   enrich: "enrich.pending",
   datasets: "datasets.refresh",
+  repliesPoll: "replies.poll",
+  deadlineTick: "deadline.tick",
+  digest: "notify.digest",
 } as const;
 
 export type SyncJob = { accountId: string };
@@ -47,4 +50,10 @@ export async function enqueueScanProcess() {
 export async function enqueueEnrich() {
   const b = await getBoss();
   return b.send(QUEUES.enrich, {}, { singletonKey: "enrich", retryLimit: 2, retryBackoff: true });
+}
+
+/** Reply matching after new headers land (and on its own 10-minute schedule). Extra requests collapse. */
+export async function enqueueRepliesPoll() {
+  const b = await getBoss();
+  return b.send(QUEUES.repliesPoll, {}, { singletonKey: "replies", retryLimit: 2, retryBackoff: true });
 }

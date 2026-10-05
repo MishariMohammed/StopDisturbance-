@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { enqueueEnrich, enqueueScanProcess, getBoss, QUEUES, type SyncJob } from "@/lib/jobs/queue";
+import { enqueueEnrich, enqueueRepliesPoll, enqueueScanProcess, getBoss, QUEUES, type SyncJob } from "@/lib/jobs/queue";
 import { resolvePending } from "@/lib/scan/resolve";
 import { classifySenders } from "@/lib/scan/classify";
 import { classifyUnsettled } from "@/lib/llm/classify-unsettled";
@@ -10,6 +10,17 @@ import { applyJurisdiction } from "@/lib/legal/drafts";
 import { incrementalSync, initialSync } from "@/lib/mail/gmail-sync";
 import { outlookIncrementalSync, outlookInitialSync } from "@/lib/mail/outlook-sync";
 import { ReconnectRequiredError } from "@/lib/mail/accounts";
+import { dispatchDue } from "@/lib/send/dispatcher";
+import { pollReplies } from "@/lib/track/poll";
+import { deadlineTick } from "@/lib/track/deadline-tick";
+import { sendWeeklyDigest } from "@/lib/notify/digest";
+import { sendAlert } from "@/lib/notify/alerts";
+
+// send.dispatch runs every 15 s. pg-boss cron granularity is one minute, so the worker drives it with a
+// non-overlapping setInterval loop instead of a schedule: it needs no queue round-trip, an in-flight
+// guard prevents overlap, and the dispatcher's compare-and-set claim keeps a send single even if a
+// second worker ever runs. Serial per mailbox and spacing/cap checks live in dispatchDue().
+export const DISPATCH_INTERVAL_MS = 15_000;
 
 async function runSync(job: SyncJob, mode: "initial" | "incremental") {
   const account = await db.mailAccount.findUnique({ where: { id: job.accountId } });
@@ -23,9 +34,12 @@ async function runSync(job: SyncJob, mode: "initial" | "incremental") {
       else await outlookIncrementalSync(account.id);
     }
     await enqueueScanProcess();
+    // Replies are matched after the incremental sync stored the new headers (stage 9).
+    if (mode === "incremental") await enqueueRepliesPoll();
   } catch (err) {
     if (err instanceof ReconnectRequiredError) {
       logger.warn({ accountId: account.id }, "mailbox needs reconnect");
+      await sendAlert("MAILBOX_DISCONNECTED", { mailbox: account.address });
       return;
     }
     throw err;
@@ -63,11 +77,49 @@ async function main() {
     const r = await refreshDatasets({ maxAgeDays: 7 });
     logger.info({ refreshed: r.results.length, errors: r.errors.length }, "datasets refreshed");
   });
+  await boss.work(QUEUES.repliesPoll, async () => {
+    // Several batches if a sync brought many headers; each call advances the cursor.
+    for (let i = 0; i < 10; i++) {
+      const r = await pollReplies();
+      logger.info(r, "replies polled");
+      if (r.scanned < 500) break;
+    }
+  });
+  await boss.work(QUEUES.deadlineTick, async () => {
+    const r = await deadlineTick();
+    logger.info(
+      { overdue: r.overdue.length, reminders: r.reminderOffered.length, escalations: r.escalationOpen.length, completed: r.autoCompleted.length },
+      "deadline tick",
+    );
+  });
+  await boss.work(QUEUES.digest, async () => {
+    const sent = await sendWeeklyDigest();
+    logger.info({ sent }, "weekly digest");
+  });
   await boss.schedule(QUEUES.datasets, "17 3 * * 0", {}, { tz });
   await boss.schedule(QUEUES.syncAll, "*/10 * * * *", {}, { tz });
+  // Fallback poll 5 minutes after each sync round, in case a sync job failed to enqueue it.
+  await boss.schedule(QUEUES.repliesPoll, "5-59/10 * * * *", {}, { tz });
+  await boss.schedule(QUEUES.deadlineTick, "0 6 * * *", {}, { tz });
+  await boss.schedule(QUEUES.digest, "0 9 * * 0", {}, { tz });
+
+  let dispatching = false;
+  const dispatchTimer = setInterval(async () => {
+    if (dispatching) return;
+    dispatching = true;
+    try {
+      const out = await dispatchDue();
+      if (out.length) logger.info({ results: out.map((o) => o.result) }, "send dispatch");
+    } catch (err) {
+      logger.error({ err: (err as Error).message }, "send dispatch failed");
+    } finally {
+      dispatching = false;
+    }
+  }, DISPATCH_INTERVAL_MS);
 
   logger.info("worker started");
   const stop = async () => {
+    clearInterval(dispatchTimer);
     await boss.stop({ graceful: true });
     await db.$disconnect();
     process.exit(0);

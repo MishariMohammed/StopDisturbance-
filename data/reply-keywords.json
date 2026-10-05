@@ -1,0 +1,73 @@
+{
+  "version": "2026-10-05.1",
+  "note": "Reply keyword classifier (00-brief §3, stage 9). Phrases are matched case-insensitively on the reply text with quoted history removed. Arabic phrases are matched after removing tashkeel and normalising alef/ya/ta marbuta. Class precedence when several match: needs_id, refused, extension, completed, acknowledged.",
+  "classes": {
+    "needs_id": {
+      "en": [
+        "verify your identity", "verification of your identity", "confirm your identity", "proof of identity", "identity verification",
+        "copy of your id", "copy of your passport", "government-issued id", "government issued id", "photo id", "national id",
+        "provide your order number", "provide an order number", "additional information to locate", "we need more information",
+        "please provide the following", "unable to locate your account", "could not locate your account", "cannot find an account",
+        "submit your request through our form", "use our online form", "please complete the form", "via our privacy portal",
+        "please confirm your request by clicking"
+      ],
+      "ar": [
+        "التحقق من هويتك", "التحقق من الهويه", "اثبات الهويه", "اثبات هويتك", "صوره من الهويه", "صوره الهويه", "جواز السفر", "رقم الهويه",
+        "الهويه الوطنيه", "رقم الطلب", "رقم الاقامه", "معلومات اضافيه", "يرجى تزويدنا", "لم نتمكن من العثور على حسابك", "النموذج الالكتروني",
+        "تعبئه النموذج"
+      ]
+    },
+    "refused": {
+      "en": [
+        "unable to comply", "cannot comply", "we are not able to delete", "we cannot delete", "unable to delete", "we must retain",
+        "required to retain", "legal obligation to retain", "we decline", "we are declining", "request is denied", "request has been denied",
+        "request has been rejected", "we reject", "exemption applies", "not subject to", "does not apply to us", "manifestly unfounded",
+        "excessive request"
+      ],
+      "ar": [
+        "لا يمكننا حذف", "لا نستطيع حذف", "تعذر حذف", "رفض طلبك", "تم رفض", "نعتذر عن تنفيذ", "لا يمكننا تنفيذ", "ملزمون بالاحتفاظ",
+        "الاحتفاظ بالبيانات وفقا", "لا ينطبق"
+      ]
+    },
+    "extension": {
+      "en": [
+        "extend the deadline", "extension of the deadline", "extend the period", "extending the response period", "additional two months",
+        "further two months", "additional 30 days", "further 30 days", "additional month", "need more time", "require additional time",
+        "article 12(3)", "art. 12(3)"
+      ],
+      "ar": [
+        "تمديد المهله", "تمديد المده", "تمديد فتره", "مده اضافيه", "30 يوما اضافيه", "ثلاثين يوما اضافيه", "نحتاج الى وقت اضافي"
+      ]
+    },
+    "completed": {
+      "en": [
+        "has been deleted", "have been deleted", "has been erased", "have been erased", "we have deleted", "we've deleted",
+        "successfully deleted", "data was deleted", "account has been closed", "account has been deleted", "you have been unsubscribed",
+        "you've been unsubscribed", "successfully unsubscribed", "removed from our mailing list", "removed you from our mailing list",
+        "removed from all marketing", "will no longer receive marketing", "will no longer receive", "opted out of marketing",
+        "request has been completed", "request is complete", "we have completed your request", "has been fulfilled", "has been processed and"
+      ],
+      "ar": [
+        "تم حذف", "تم مسح", "تم اتلاف", "تم الغاء اشتراكك", "تم الغاء الاشتراك", "تمت ازالتك", "تمت ازاله", "لن تتلقى", "تم تنفيذ طلبك",
+        "تمت معالجه طلبك", "تم اغلاق حسابك", "تم ايقاف الرسائل"
+      ]
+    },
+    "acknowledged": {
+      "en": [
+        "we have received your request", "we received your request", "we've received your request", "thank you for your request",
+        "thank you for contacting", "your request has been received", "your request has been logged", "a ticket has been created",
+        "ticket number", "case number", "reference number", "request id", "we will respond within", "we will get back to you",
+        "we aim to respond", "we are processing your request", "is being processed", "this is an automated response", "this is an automatic reply",
+        "automatic reply", "auto-reply", "do not reply to this email"
+      ],
+      "ar": [
+        "استلمنا طلبك", "تم استلام طلبك", "شكرا لتواصلك", "شكرا لك على تواصلك", "رقم التذكره", "رقم البلاغ", "رقم المرجع", "جاري معالجه طلبك",
+        "قيد المعالجه", "سنقوم بالرد", "سيتم الرد", "رد تلقائي", "هذه رساله تلقائيه"
+      ]
+    }
+  },
+  "autoReplySubjects": {
+    "en": ["automatic reply", "auto reply", "auto-reply", "autoreply", "out of office", "we received your request", "request received", "ticket", "case #"],
+    "ar": ["رد تلقائي", "تم استلام"]
+  }
+}
