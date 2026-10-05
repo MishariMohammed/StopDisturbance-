@@ -1,0 +1,50 @@
+import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { getBoss, QUEUES, type SyncJob } from "@/lib/jobs/queue";
+import { incrementalSync, initialSync } from "@/lib/mail/gmail-sync";
+import { ReconnectRequiredError } from "@/lib/mail/accounts";
+
+async function runSync(job: SyncJob, mode: "initial" | "incremental") {
+  const account = await db.mailAccount.findUnique({ where: { id: job.accountId } });
+  if (!account || account.status !== "ACTIVE") return;
+  if (account.provider !== "GOOGLE") return; // Outlook sync arrives in M2
+  try {
+    if (mode === "initial") await initialSync(account.id);
+    else await incrementalSync(account.id);
+  } catch (err) {
+    if (err instanceof ReconnectRequiredError) {
+      logger.warn({ accountId: account.id }, "mailbox needs reconnect");
+      return;
+    }
+    throw err;
+  }
+}
+
+async function main() {
+  const boss = await getBoss();
+  const tz = process.env.TZ_DEFAULT ?? "Asia/Riyadh";
+
+  await boss.work<SyncJob>(QUEUES.syncInitial, async ([job]) => runSync(job.data, "initial"));
+  await boss.work<SyncJob>(QUEUES.syncIncremental, async ([job]) => runSync(job.data, "incremental"));
+  await boss.work(QUEUES.syncAll, async () => {
+    const accounts = await db.mailAccount.findMany({ where: { status: "ACTIVE" }, select: { id: true } });
+    for (const a of accounts) {
+      await boss.send(QUEUES.syncIncremental, { accountId: a.id } satisfies SyncJob, { singletonKey: a.id });
+    }
+  });
+  await boss.schedule(QUEUES.syncAll, "*/10 * * * *", {}, { tz });
+
+  logger.info("worker started");
+  const stop = async () => {
+    await boss.stop({ graceful: true });
+    await db.$disconnect();
+    process.exit(0);
+  };
+  process.on("SIGTERM", stop);
+  process.on("SIGINT", stop);
+}
+
+main().catch((err) => {
+  logger.error({ err: err.message }, "worker failed to start");
+  process.exit(1);
+});

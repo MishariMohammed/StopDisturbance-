@@ -1,0 +1,49 @@
+{
+  "name": "stopdisturbance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build && npm run build:worker",
+    "build:worker": "esbuild src/worker.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/worker.js --alias:@=./src",
+    "start": "next start",
+    "worker": "node dist/worker.js",
+    "worker:dev": "tsx src/worker.ts",
+    "db:migrate": "prisma migrate deploy",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "better-auth": "^1.7.7",
+    "next": "^15.5.27",
+    "next-intl": "^4.14.9",
+    "pg-boss": "^10.4.2",
+    "pino": "^10.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tldts": "^7.4.16",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.27",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

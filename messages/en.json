@@ -1,0 +1,24 @@
+{
+  "app": { "name": "StopDisturbance" },
+  "login": {
+    "title": "Sign in",
+    "lead": "This is your private tool. Only your own Google or Microsoft account can sign in.",
+    "google": "Continue with Google",
+    "microsoft": "Continue with Microsoft",
+    "rejected": "This app is private."
+  },
+  "connect": {
+    "title": "Connect your mailboxes",
+    "lead": "We read sender, subject and list headers to find companies. We don't read your email bodies.",
+    "gmail": "Connect Gmail",
+    "outlook": "Connect Outlook (coming next)",
+    "connected": "Connected",
+    "needsReconnect": "Reconnect needed",
+    "partial": "Read access granted. Sending will ask for permission the first time you send.",
+    "scanning": "Scanning: {fetched} of {listed} messages",
+    "done": "Scan complete: {count} messages",
+    "error": "Couldn't connect: {reason}",
+    "unverifiedTitle": "Before you continue",
+    "unverifiedBody": "Google will show “Google hasn't verified this app”. That's expected for your own private app. Check that the app name and developer email are yours, then choose Advanced → Go to StopDisturbance."
+  }
+}

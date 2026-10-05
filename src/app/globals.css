@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+/* Design tokens: full set from 04-ux §12 lands in M3. */
+@theme {
+  --color-brand: #0f766e;
+  --color-brand-ink: #ffffff;
+  --font-sans: "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif;
+}
+
+body {
+  background: #ffffff;
+  color: #111827;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0b1220;
+    color: #e5e7eb;
+  }
+}

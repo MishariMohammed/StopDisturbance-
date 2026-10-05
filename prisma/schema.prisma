@@ -1,0 +1,425 @@
+// StopDisturbance data model. Source of truth: docs/00-brief.md §4.
+// Retention rules live in src/lib/jobs/retention.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_DIRECT")
+}
+
+// ---------- Better Auth (owner login only) ----------
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+// Login identities only. Mailbox tokens live encrypted in MailAccount.
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// ---------- Domain ----------
+
+enum Provider {
+  GOOGLE
+  MICROSOFT
+}
+
+enum AccountStatus {
+  ACTIVE
+  NEEDS_RECONNECT
+  DISCONNECTED
+}
+
+enum Confidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum DecisionValue {
+  KEEP
+  UNSUBSCRIBE
+  REMOVE
+}
+
+enum ContactKind {
+  PRIVACY_EMAIL
+  WEB_FORM
+  ONE_CLICK
+  MAILTO_UNSUB
+  ACCOUNT_DELETE_URL
+  SUPPORT_EMAIL
+}
+
+enum RequestType {
+  ERASURE_OBJECTION
+  STOP_MARKETING
+  ONE_CLICK
+  MAILTO_UNSUB
+  WEB_FORM
+}
+
+// Canonical statuses shared by 03-legal and 04-ux (00-review D-statuses).
+enum RequestStatus {
+  DRAFT
+  APPROVED
+  QUEUED
+  SENT
+  ACKNOWLEDGED
+  NEEDS_ACTION
+  COMPLETED
+  REFUSED
+  OVERDUE
+  ESCALATED
+  FAILED
+  CANCELLED
+}
+
+model Owner {
+  id              String   @id @default("owner")
+  fullName        String   @default("")
+  country         String   @default("SA")
+  usState         String?
+  locale          String   @default("ar")
+  numerals        String   @default("latn")
+  timezone        String   @default("Asia/Riyadh")
+  loginEmails     String[]
+  googleSub       String?
+  msOid           String?
+  employerDomains String[]
+  setupDoneAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MailAccount {
+  id              String         @id @default(cuid())
+  provider        Provider
+  address         String         @unique
+  providerUserId  String
+  tenantId        String?
+  grantedScopes   String[]
+  tokenCipher     Bytes
+  tokenKeyVersion Int
+  status          AccountStatus  @default(ACTIVE)
+  syncCursor      Json?
+  scanFrom        DateTime
+  lastSyncAt      DateTime?
+  lastRefreshAt   DateTime?
+  scanProgress    Json?
+  sentToHashes    String[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  headers         MessageHeader[]
+}
+
+// RETENTION: deleted 90 days after createdAt.
+model MessageHeader {
+  id                  String      @id @default(cuid())
+  accountId           String
+  account             MailAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  providerMsgId       String
+  threadId            String?
+  internetMessageId   String?
+  receivedAt          DateTime
+  fromAddress         String
+  fromName            String?
+  fromDomain          String
+  replyToDomain       String?
+  returnPathDomain    String?
+  dkimDomains         String[]
+  dkimPass            Boolean     @default(false)
+  dkimCoversListUnsub Boolean     @default(false)
+  subject             String?
+  listUnsubHttpsCipher Bytes?     // encrypted: the URL carries a per-recipient token
+  listUnsubMailto     String?
+  oneClick            Boolean     @default(false)
+  listId              String?
+  feedbackId          String?
+  precedence          String?
+  autoSubmitted       String?
+  labels              String[]
+  esp                 String?
+  isMarketing         Boolean     @default(false)
+  isTransactional     Boolean     @default(false)
+  isPersonal          Boolean     @default(false)
+  isSent              Boolean     @default(false)
+  senderId            String?
+  createdAt           DateTime    @default(now())
+
+  @@unique([accountId, providerMsgId])
+  @@index([fromDomain])
+  @@index([createdAt])
+}
+
+model Sender {
+  id                 String   @id @default(cuid())
+  registrableDomain  String   @unique
+  displayName        String?
+  companyId          String?
+  isEsp              Boolean  @default(false)
+  isPersonal         Boolean  @default(false)
+  msgCount           Int      @default(0)
+  marketingCount     Int      @default(0)
+  transactionalCount Int      @default(0)
+  firstSeen          DateTime
+  lastSeen           DateTime
+  hasOneClick        Boolean  @default(false)
+  exampleSubjects    String[]
+  accountIds         String[]
+  updatedAt          DateTime @updatedAt
+}
+
+model Company {
+  id            String         @id @default(cuid())
+  name          String
+  primaryDomain String         @unique
+  holdsData     Boolean        @default(false)
+  sendsAds      Boolean        @default(false)
+  isBroker      Boolean        @default(false)
+  confidence    Confidence     @default(LOW)
+  sector        String?
+  jurisdiction  Json?
+  decision      DecisionValue?
+  logoPath      String?
+  enrichedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model CompanyDomain {
+  domain    String @id
+  companyId String
+  source    String // psl | llm | manual
+}
+
+model CompanyContact {
+  id             String      @id @default(cuid())
+  companyId      String
+  kind           ContactKind
+  value          String
+  source         String
+  confidence     Confidence
+  mxOk           Boolean?
+  portalVendor   String?
+  lastVerifiedAt DateTime
+  ownerConfirmed Boolean     @default(false)
+
+  @@index([companyId])
+}
+
+model Classification {
+  id        String     @id @default(cuid())
+  senderId  String?
+  companyId String?
+  method    String // RULES | LLM | MANUAL
+  labels    String[]
+  ruleIds   String[]
+  confidence Confidence
+  llmCallId String?
+  createdAt DateTime   @default(now())
+}
+
+model Decision {
+  id        String        @id @default(cuid())
+  companyId String
+  value     DecisionValue
+  viaBulk   Boolean       @default(false)
+  createdAt DateTime      @default(now())
+}
+
+// RETENTION: closedAt + retentionYears.
+model Request {
+  id                    String        @id @default(cuid())
+  companyId             String
+  mailAccountId         String
+  type                  RequestType
+  status                RequestStatus @default(DRAFT)
+  needsActionReason     String?
+  reference             String        @unique
+  lawKeys               String[]
+  citationsText         String        @default("")
+  lowConfidenceWording  Boolean       @default(false)
+  clockStart            DateTime?
+  dueAt                 DateTime?
+  latestDueAt           DateTime?
+  extendedDueAt         DateTime?
+  reminderOfferedAt     DateTime?
+  reminderSentAt        DateTime?
+  escalationOpenAt      DateTime?
+  complaintWindowEndsAt DateTime?
+  extensionClaimed      Boolean       @default(false)
+  stillEmailing         Boolean       @default(false)
+  bounced               Boolean       @default(false)
+  complaintRef          String?
+  closedAt              DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+model OutboundMessage {
+  id                String    @id @default(cuid())
+  requestId         String
+  kind              String // INITIAL | REMINDER | ID_REPLY | UNSUB_MAILTO | ONE_CLICK_POST
+  templateId        String
+  templateVersion   String
+  language          String
+  toAddress         String?
+  subject           String?
+  bodyText          String?
+  draftHash         String
+  approvedHash      String?
+  approvedAt        DateTime?
+  sendAfter         DateTime?
+  sentAt            DateTime?
+  providerMessageId String?
+  threadId          String?
+  internetMessageId String?
+  httpStatus        Int?
+  error             String?
+  attempts          Int       @default(0)
+  createdAt         DateTime  @default(now())
+
+  @@index([requestId])
+}
+
+model InboundReply {
+  id             String   @id @default(cuid())
+  requestId      String
+  providerMsgId  String
+  receivedAt     DateTime
+  fromAddress    String
+  subject        String
+  bodyCipher     Bytes
+  matchMethod    String
+  probable       Boolean  @default(false)
+  suggestedClass String?
+  ownerConfirmed Boolean?
+
+  @@index([requestId])
+}
+
+model EvidenceHeader {
+  id               String   @id @default(cuid())
+  requestId        String
+  receivedAt       DateTime
+  rawHeadersCipher Bytes
+}
+
+model RequestEvent {
+  id        String   @id @default(cuid())
+  requestId String
+  type      String
+  actor     String // OWNER | SYSTEM
+  at        DateTime @default(now())
+  data      Json
+
+  @@index([requestId])
+}
+
+// Append-only: a trigger in the init migration blocks UPDATE.
+model AuditLog {
+  id       BigInt   @id @default(autoincrement())
+  at       DateTime @default(now())
+  action   String
+  entity   String?
+  entityId String?
+  data     Json
+}
+
+model Setting {
+  key   String @id
+  value Json
+}
+
+// RETENTION: 90 days.
+model LlmCallLog {
+  id             String   @id @default(cuid())
+  at             DateTime @default(now())
+  purpose        String
+  model          String
+  inTokens       Int
+  cacheHitTokens Int
+  outTokens      Int
+  payloadHash    String
+  fieldNames     String[]
+  ok             Boolean
+}
+
+// Ring buffer: newest 20, max 7 days.
+model LlmPayloadSample {
+  id            String   @id @default(cuid())
+  callId        String
+  payloadCipher Bytes
+  createdAt     DateTime @default(now())
+}
+
+model DatasetSnapshot {
+  source    String   @id
+  version   String
+  fetchedAt DateTime
+  data      Json
+}
+
+// RETENTION: 1 year. No content or addresses.
+model AppEvent {
+  id    BigInt   @id @default(autoincrement())
+  at    DateTime @default(now())
+  name  String
+  props Json
+}
