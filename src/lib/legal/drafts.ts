@@ -1,6 +1,7 @@
 import { createHash, randomInt } from "node:crypto";
 import type { CompanyContact, Prisma, RequestType } from "@prisma/client";
 import { db } from "@/lib/db";
+import { isEmailAddress } from "@/lib/email-address";
 import { addCalendarDays, DEADLINE_TZ } from "@/lib/deadlines";
 import { decideJurisdiction, factsFromJson, type JurisdictionDecision, type JurisdictionFact } from "@/lib/legal/jurisdiction";
 import { findBannedPhrases, renderTemplate, TemplateError, type TemplateId } from "@/lib/legal/render";
@@ -17,7 +18,7 @@ export class DraftError extends Error {
   constructor(
     public code:
       | "not_found" | "bad_status" | "not_approved" | "already_sent" | "missing_recipient" | "recipient_unconfirmed"
-      | "unfilled" | "banned_phrase" | "not_sendable" | "owner_incomplete",
+      | "unfilled" | "banned_phrase" | "not_sendable" | "owner_incomplete" | "invalid_recipient",
     message?: string,
   ) {
     super(message ?? code);
@@ -405,6 +406,8 @@ export async function updateDraft(
   if (out.sentAt) throw new DraftError("already_sent");
   if (request.status !== "DRAFT" && request.status !== "APPROVED") throw new DraftError("bad_status", `Cannot edit a ${request.status} item`);
   const to = patch.to !== undefined ? patch.to?.trim() || null : out.toAddress;
+  // The owner may redirect a letter (e.g. to their own address for a first test send): one valid address.
+  if (patch.to !== undefined && to !== null && !isEmailAddress(to)) throw new DraftError("invalid_recipient");
   const subject = patch.subject !== undefined ? patch.subject : out.subject;
   const body = patch.body !== undefined ? patch.body : out.bodyText;
   const draftHash = computeDraftHash(to, subject, body);

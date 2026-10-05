@@ -231,7 +231,8 @@ export function CompanyList({
           <div className="mx-auto flex max-w-content flex-wrap items-center gap-2 px-4 py-3" role="toolbar" aria-label={t("bulk.label")}>
             <span className="me-2 font-semibold" aria-hidden="true">
               {t("bulk.selected", { count: n(selected.size) })}
-              {offPage > 0 && <span className="ms-1 font-normal text-muted">{t("bulk.offPage", { count: n(offPage) })}</span>}
+              {offPage > 0 && " "}
+              {offPage > 0 && <span className="font-normal text-muted">{t("bulk.offPage", { count: n(offPage) })}</span>}
             </span>
             {(["REMOVE", "UNSUBSCRIBE", "KEEP"] as const).map((v) => (
               <button

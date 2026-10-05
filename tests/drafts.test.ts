@@ -1,3 +1,4 @@
+import { isEmailAddress } from "@/lib/email-address";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ContactKind, Confidence, DecisionValue } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -343,6 +344,30 @@ describe("approve / edit / queue / undo", () => {
     await updateDraft(out.id, { to: "  " });
     await expect(approveDraft(out.id)).rejects.toMatchObject({ code: "missing_recipient" });
     expect(await status(request.id)).toBe("DRAFT");
+  });
+
+  it("the owner can redirect a letter to another valid address; the edit clears approval", async () => {
+    const { request, out } = await oneDraft();
+    await approveDraft(out.id);
+    for (const bad of ["not-an-email", "a@b", "me@example.com, you@example.com", "Me <me@example.com>", "me@example.com\r\nBcc: x@y.com"]) {
+      await expect(updateDraft(out.id, { to: bad })).rejects.toMatchObject({ code: "invalid_recipient" });
+    }
+    // Rejected edits change nothing.
+    expect((await db.outboundMessage.findUniqueOrThrow({ where: { id: out.id } })).approvedHash).toBe(out.draftHash);
+
+    await updateDraft(out.id, { to: "  owner.test+sd@gmail.com " });
+    const o = await db.outboundMessage.findUniqueOrThrow({ where: { id: out.id } });
+    expect(o.toAddress).toBe("owner.test+sd@gmail.com");
+    expect(o.approvedHash).toBeNull();
+    expect(o.draftHash).toBe(computeDraftHash("owner.test+sd@gmail.com", o.subject, o.bodyText));
+    expect(await status(request.id)).toBe("DRAFT");
+    // The owner's own address isn't a company contact, so it needs no confirmation.
+    await expect(approveDraft(out.id)).resolves.toEqual({ approvedHash: o.draftHash });
+  });
+
+  it("isEmailAddress accepts one plain address only", () => {
+    for (const ok of ["a@example.com", "first.last+tag@sub.example.co.uk", "x@xn--mgbh0fb.xn--mgberp4a5d4ar"]) expect(isEmailAddress(ok)).toBe(true);
+    for (const bad of ["", "a@b", "a@@b.com", ".a@b.com", "a..b@c.com", "a@b.com,c@d.com", "a b@c.com", "a@-b.com", "<a@b.com>"]) expect(isEmailAddress(bad)).toBe(false);
   });
 
   it("a LOW guessed recipient must be confirmed before approval", async () => {

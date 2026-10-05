@@ -1,5 +1,6 @@
 import type { OutboundMessage } from "@prisma/client";
 import { db } from "@/lib/db";
+import { isEmailAddress } from "@/lib/email-address";
 import {
   approveDraft,
   computeDraftHash,
@@ -186,6 +187,7 @@ export async function updateOutbound(outboundId: string, patch: { subject?: stri
   if (!isFollowUp(out.kind)) return updateDraft(outboundId, patch);
   if (out.sentAt) throw new TrackError("already_sent");
   const to = patch.to !== undefined ? patch.to?.trim() || null : out.toAddress;
+  if (patch.to !== undefined && to !== null && !isEmailAddress(to)) throw new DraftError("invalid_recipient");
   const subject = patch.subject !== undefined ? patch.subject : out.subject;
   const body = patch.body !== undefined ? patch.body : out.bodyText;
   const draftHash = computeDraftHash(to, subject, body);

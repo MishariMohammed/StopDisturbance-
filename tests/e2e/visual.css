@@ -1,0 +1,4 @@
+/* Applied while taking visual baselines (visual.spec.ts). The `next dev` build indicator is not part of the app. */
+nextjs-portal {
+  display: none !important;
+}

@@ -85,6 +85,40 @@ test("editing after approval clears the approval; guardrails and diff", async ({
   await expect(editor(page).getByRole("textbox", { name: "Letter" })).toHaveValue(text);
 });
 
+test("the recipient can be changed (e.g. to the owner's own address); a bad address is refused; the edit clears approval", async ({ page }) => {
+  await gotoReady(page, "/en/review");
+  await queue(page).getByRole("button", { name: /Noon/ }).click();
+  await editor(page).getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Noon: approved." })).toBeVisible();
+  await queue(page).getByRole("button", { name: /Noon/ }).click();
+  const to = editor(page).getByRole("textbox", { name: "To" });
+  await expect(to).toHaveValue("privacy@noon.com");
+
+  await to.fill("me at example");
+  await expect(to).toHaveAttribute("aria-invalid", "true");
+  await expect(to).toHaveAccessibleDescription(/Enter one email address/);
+  await expect(editor(page).getByRole("button", { name: "Save changes" })).toBeDisabled();
+  await expect(editor(page).getByRole("button", { name: "Approve" })).toBeDisabled();
+
+  await to.fill("you@gmail.com");
+  await expect(to).not.toHaveAttribute("aria-invalid", "true");
+  await expect(editor(page).locator("[data-recipient-changed]")).toContainText("privacy@noon.com");
+  await editor(page).getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Your edit cleared the approval" })).toBeVisible();
+  const out = await withDb((db) =>
+    db.request.findUniqueOrThrow({ where: { reference: "SD-NN01" } }).then((r) => db.outboundMessage.findFirstOrThrow({ where: { requestId: r.id } })),
+  );
+  expect(out.toAddress).toBe("you@gmail.com");
+  expect(out.approvedHash).toBeNull();
+  expect(await statusOf("SD-NN01")).toBe("DRAFT");
+
+  // Approve again; the send dialog names the new recipient.
+  await editor(page).getByRole("button", { name: "Approve" }).click();
+  await expect.poll(() => statusOf("SD-NN01")).toBe("APPROVED");
+  await page.getByRole("button", { name: "Send 1 approved requests…" }).click();
+  await expect(page.getByRole("dialog", { name: "Send 1 requests?" })).toContainText("Noon — Remove my data — you@gmail.com");
+});
+
 test("send confirmation names the count, mailbox and every recipient; undo cancels", async ({ page }) => {
   await gotoReady(page, "/en/review?view=list");
   for (const name of ["Noon", "مكتبة جرير", "Careem"]) {

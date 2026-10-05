@@ -113,3 +113,30 @@ test("merge and split work with the keyboard only", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(rowCheckboxes(page)).toHaveCount(2);
 });
+
+test("pagination: pages split the list, but select-all, bulk Remove and its confirmation cover every page", async ({ page }) => {
+  await gotoReady(page, "/en/companies?per=25");
+  await expect(rowCheckboxes(page)).toHaveCount(25);
+  const pages = page.getByRole("navigation", { name: "Pages" });
+  await expect(pages).toContainText("Page 1 of 2 · showing 1–25 of 40");
+  await page.getByLabel("Select all 40 matching").check();
+  await expect(page.getByRole("toolbar", { name: "Bulk actions" })).toContainText("40 selected (15 on other pages)");
+  await page.getByRole("button", { name: "Mark Remove" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Mark 30 as Remove" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Marked 30" })).toBeVisible();
+
+  // Page 2 keeps the filters and page size in the URL, and shows the rows marked from page 1.
+  await pages.getByRole("link", { name: /Next/ }).click();
+  await expect(page).toHaveURL(/per=25&page=2/);
+  await expect(rowCheckboxes(page)).toHaveCount(15);
+  await expect(pages).toContainText("Page 2 of 2 · showing 26–40 of 40");
+  const removedOnPage2 = await page.locator("li[data-company] input[type=radio][value=REMOVE]:checked").count();
+  await pages.getByRole("link", { name: /Previous/ }).click();
+  await expect(page).not.toHaveURL(/page=2/);
+  expect(removedOnPage2 + (await page.locator("li[data-company] input[type=radio][value=REMOVE]:checked").count())).toBe(30);
+
+  // A filter change keeps the page size and goes back to page 1.
+  await page.getByRole("link", { name: /^Holds data/ }).click();
+  await expect(page).toHaveURL(/cat=data&per=25$/);
+  await expect(rowCheckboxes(page)).toHaveCount(25);
+});

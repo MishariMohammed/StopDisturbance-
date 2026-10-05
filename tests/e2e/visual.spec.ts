@@ -1,3 +1,4 @@
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { gotoReady, reseed } from "./helpers";
 
@@ -25,6 +26,7 @@ async function snap(page: Page, name: string) {
     fullPage: true,
     mask: [page.locator("[data-volatile]")],
     animations: "disabled",
+    stylePath: path.join(import.meta.dirname, "visual.css"),
     maxDiffPixelRatio: 0.002,
   });
 }

@@ -8,6 +8,7 @@ import { channelOf, planSend, secondsLeft, type ReviewChannel } from "@/lib/revi
 import { diffWords, hasChanges } from "@/lib/review/diff";
 import { detectIdentifiers, hasPossibleIdNumber, IDENTIFIER_KEYS } from "@/lib/review/personal-data";
 import { formatDate, formatNumber } from "@/lib/format";
+import { isEmailAddress } from "@/lib/email-address";
 import { Modal } from "@/components/modal";
 import { UndoToast } from "@/components/undo-toast";
 import { LawExplainer } from "@/components/law-explainer";
@@ -449,11 +450,19 @@ function PersonalDataChips({ text, fullName, emails }: { text: string; fullName:
   );
 }
 
-function ChannelCard({ item, locale, edit, onTo, onConfirm, pending }: {
+/** True when the owner typed a recipient that isn't one plain email address (blank is caught at approval). */
+function recipientInvalid(item: ReviewItem, edit: Edit): boolean {
+  if (edit.to === undefined || edit.to === (item.to ?? "")) return false;
+  const v = edit.to.trim();
+  return v !== "" && !isEmailAddress(v);
+}
+
+function ChannelCard({ item, locale, edit, onTo, onConfirm, pending, invalid }: {
   item: ReviewItem;
   locale: string;
   edit: Edit;
   onTo: (v: string) => void;
+  invalid: boolean;
   onConfirm: (contactId: string) => void;
   pending: boolean;
 }) {
@@ -494,9 +503,23 @@ function ChannelCard({ item, locale, edit, onTo, onConfirm, pending }: {
             value={edit.to ?? item.to ?? ""}
             onChange={(e) => onTo(e.target.value)}
             disabled={item.status === "QUEUED"}
-            aria-describedby="rcpt-src"
-            className="mt-1 block min-h-tap w-full max-w-md rounded-md border border-border-strong bg-surface px-3"
+            autoComplete="off"
+            spellCheck={false}
+            aria-invalid={invalid || undefined}
+            aria-describedby={invalid ? "rcpt-err rcpt-src" : "rcpt-src"}
+            className={`mt-1 block min-h-tap w-full max-w-md rounded-md border bg-surface px-3 ${invalid ? "border-danger" : "border-border-strong"}`}
           />
+          {invalid && (
+            <p id="rcpt-err" className="mt-1 text-sm font-medium text-danger">
+              <span aria-hidden="true">⚠ </span>
+              {t("recipient.invalid")}
+            </p>
+          )}
+          {!invalid && item.original?.to && (edit.to ?? item.to ?? "").trim() && (edit.to ?? item.to ?? "").trim() !== item.original.to && (
+            <p data-recipient-changed className="mt-1 text-sm text-warning">
+              {t("recipient.changed")} <bdi dir="ltr">{item.original.to}</bdi>
+            </p>
+          )}
           <p id="rcpt-src" data-volatile className="mt-1 text-xs text-muted">
             {item.contact
               ? t("recipient.source", {
@@ -560,6 +583,7 @@ function DraftEditor(props: {
   const idWarn = editable && hasPossibleIdNumber(`${subject}\n${body}`);
   const warnings = [...new Set([...props.serverWarnings, ...(idWarn ? ["possible_id_number"] : [])])];
   const n = (v: number) => formatNumber(locale, v);
+  const toInvalid = recipientInvalid(item, edit);
 
   return (
     <article aria-labelledby="draft-title" className="flex min-w-0 flex-col gap-4 rounded-lg border border-border bg-surface p-4 sm:p-6" data-outbound={item.outboundId}>
@@ -587,7 +611,7 @@ function DraftEditor(props: {
       )}
       {item.error && <p className="rounded-md bg-danger-bg p-2 text-sm text-danger">{t("lastError", { error: item.error })}</p>}
 
-      <ChannelCard item={item} locale={locale} edit={edit} onTo={(v) => props.onEdit({ to: v })} onConfirm={props.onConfirmRecipient} pending={pending} />
+      <ChannelCard item={item} locale={locale} edit={edit} onTo={(v) => props.onEdit({ to: v })} onConfirm={props.onConfirmRecipient} pending={pending} invalid={toInvalid} />
 
       {letter && (
         <LawExplainer keys={item.law.keys} summaries={data.laws} why={item.law.why} lowConfidence={item.law.lowConfidence} locale={locale} headingId="law-title" />
@@ -675,7 +699,7 @@ function DraftEditor(props: {
 
       <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
         {props.dirty && (
-          <button type="button" disabled={pending} onClick={props.onSave} className="min-h-tap rounded-md border border-border-strong px-4 font-medium">
+          <button type="button" disabled={pending || toInvalid} onClick={props.onSave} className="min-h-tap rounded-md border border-border-strong px-4 font-medium disabled:opacity-60">
             {t("save")}
           </button>
         )}
@@ -694,7 +718,7 @@ function DraftEditor(props: {
               {t("unapprove")}
             </button>
           ) : (
-            <button type="button" disabled={pending} onClick={props.onApprove} className="min-h-tap rounded-md bg-primary px-4 font-medium text-primary-fg sm:ms-auto">
+            <button type="button" disabled={pending || toInvalid} onClick={props.onApprove} className="min-h-tap rounded-md bg-primary px-4 font-medium text-primary-fg disabled:opacity-60 sm:ms-auto">
               {t("approve")}
               <span aria-hidden="true" className="ms-1 inline-block rtl:-scale-x-100">→</span>
             </button>

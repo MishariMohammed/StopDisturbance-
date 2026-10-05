@@ -617,7 +617,9 @@
         "domain": "guessed from their domain",
         "guess": "guessed",
         "sender": "their sending address"
-      }
+      },
+      "invalid": "Enter one email address, like name@example.com.",
+      "changed": "Changed from the address we found:"
     },
     "law": {
       "title": "Law:",
@@ -741,7 +743,8 @@
       "no_original": "The original text isn't available.",
       "bad_date": "Pick a date that isn't in the future.",
       "someNotQueued": "{count} could not be queued — check them and try again.",
-      "not_found": "Not found. Refresh the page."
+      "not_found": "Not found. Refresh the page.",
+      "invalid_recipient": "That isn't a valid email address."
     }
   },
   "tracker": {

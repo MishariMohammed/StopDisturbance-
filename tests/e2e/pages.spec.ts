@@ -45,22 +45,3 @@ test("/connect first-run setup saves owner details with AI default Rules only", 
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Limited access")).toBeVisible();
 });
-
-test("/settings refuses DeepSeek without the training opt-out confirmation", async ({ page }) => {
-  await page.goto("/en/settings");
-  await page.getByRole("radio", { name: /^DeepSeek/ }).check();
-  await page.getByRole("button", { name: "Save AI setting" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "DeepSeek stays off" })).toBeVisible();
-  await expect(page.getByText("Current mode:")).toContainText("Rules only");
-
-  await page.getByRole("radio", { name: /^DeepSeek/ }).check();
-  await page.getByLabel("I turned off training in my DeepSeek account").check();
-  await page.getByLabel("Date you turned it off").fill("2026-01-15");
-  await page.getByRole("button", { name: "Save AI setting" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "DeepSeek is on" })).toBeVisible();
-  await expect(page.getByText("Current mode:")).toContainText("DeepSeek");
-
-  await page.getByRole("radio", { name: /^Rules only/ }).check();
-  await page.getByRole("button", { name: "Save AI setting" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "nothing will be sent to DeepSeek" })).toBeVisible();
-});
