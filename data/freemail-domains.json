@@ -1,0 +1,17 @@
+{
+  "_comment": "Consumer mailbox providers. A sender on these domains with no list/ESP signals is a personal correspondent (03-legal §9); these domains are never companies.",
+  "domains": [
+    "gmail.com", "googlemail.com",
+    "outlook.com", "outlook.sa", "outlook.fr", "outlook.de", "outlook.co.uk", "hotmail.com", "hotmail.co.uk", "hotmail.fr", "hotmail.de", "hotmail.it", "hotmail.es", "live.com", "live.co.uk", "live.fr", "msn.com", "windowslive.com", "passport.com",
+    "yahoo.com", "yahoo.co.uk", "yahoo.fr", "yahoo.de", "yahoo.es", "yahoo.it", "yahoo.ca", "yahoo.co.in", "yahoo.co.jp", "yahoo.com.au", "ymail.com", "rocketmail.com",
+    "icloud.com", "me.com", "mac.com",
+    "proton.me", "protonmail.com", "protonmail.ch", "pm.me",
+    "gmx.com", "gmx.net", "gmx.de", "gmx.at", "gmx.ch", "gmx.co.uk", "web.de",
+    "aol.com", "aim.com",
+    "yandex.com", "yandex.ru", "yandex.ua", "ya.ru",
+    "mail.ru", "inbox.ru", "list.ru", "bk.ru",
+    "zoho.com", "zohomail.com", "tutanota.com", "tuta.io", "fastmail.com", "fastmail.fm", "hey.com",
+    "qq.com", "163.com", "126.com", "naver.com", "daum.net",
+    "mail.com", "email.com", "usa.com", "hushmail.com", "rediffmail.com", "seznam.cz", "libero.it", "orange.fr", "free.fr", "laposte.net", "t-online.de"
+  ]
+}

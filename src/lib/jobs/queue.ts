@@ -4,6 +4,7 @@ export const QUEUES = {
   syncInitial: "sync.initial",
   syncIncremental: "sync.incremental",
   syncAll: "sync.all",
+  scanProcess: "scan.process",
 } as const;
 
 export type SyncJob = { accountId: string };
@@ -33,4 +34,10 @@ export async function enqueueInitialSync(accountId: string) {
   const b = await getBoss();
   // singletonKey: one initial sync per mailbox at a time.
   return b.send(QUEUES.syncInitial, { accountId } satisfies SyncJob, { singletonKey: accountId, retryLimit: 3, retryBackoff: true });
+}
+
+/** Resolve + classify after new headers land. One run at a time; extra requests collapse. */
+export async function enqueueScanProcess() {
+  const b = await getBoss();
+  return b.send(QUEUES.scanProcess, {}, { singletonKey: "scan", retryLimit: 2, retryBackoff: true });
 }

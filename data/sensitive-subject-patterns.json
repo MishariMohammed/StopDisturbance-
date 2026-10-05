@@ -1,0 +1,13 @@
+{
+  "_comment": "Subjects matching any pattern are never sent to the LLM (00-brief §8) and never kept as example subjects. Case-insensitive. EN + AR.",
+  "patterns": [
+    { "id": "medical_en", "pattern": "\\b(medical|medicine|prescription|pharmacy|diagnos\\w*|lab (test|result)s?|test results?|patient|clinic|hospital|doctor|appointment|health record|insurance claim|vaccin\\w*|therapy|dental)\\b" },
+    { "id": "medical_ar", "pattern": "(طبي|طبية|وصفة|صيدلية|تشخيص|تحاليل|نتائج الفحص|نتيجة الفحص|مريض|المريض|عيادة|مستشفى|مستشفيات|طبيب|موعدك|موعد|السجل الصحي|تطعيم|لقاح|مطالبة تأمين|أسنان)" },
+    { "id": "bank_en", "pattern": "\\b(bank|banking|statement|e-?statement|iban|account balance|balance|transfer|wire|credit card|debit card|card ending|overdraft|loan|mortgage|salary|payslip|tax return|transaction alert)\\b" },
+    { "id": "bank_ar", "pattern": "(بنك|البنك|مصرف|كشف حساب|كشف الحساب|رصيد|حوالة|تحويل|آيبان|ايبان|بطاقة ائتمان|بطاقة مدى|بطاقتك|قرض|تمويل|راتب|مسير الرواتب|عملية شراء|إشعار عملية)" },
+    { "id": "auth_en", "pattern": "\\b(password|passcode|pass code|otp|one[- ]time (code|password|pin)|verification code|security code|confirmation code|login code|sign[- ]in code|auth(entication)? code|2fa|two[- ]factor|pin code|reset your|access code|magic link)\\b" },
+    { "id": "auth_ar", "pattern": "(كلمة المرور|كلمة السر|رمز التحقق|رمز التفعيل|رمز الدخول|رمز التأكيد|الرمز السري|رمز لمرة واحدة|كود التحقق|كود التفعيل|إعادة تعيين|استعادة الحساب)" },
+    { "id": "legal_en", "pattern": "\\b(court|lawsuit|litigation|subpoena|summons|attorney|lawyer|legal notice|legal action|police|arrest|warrant|violation notice|traffic fine|penalty notice|debt collection|bailiff|immigration|visa decision)\\b" },
+    { "id": "legal_ar", "pattern": "(محكمة|المحكمة|قضية|دعوى|محامي|محامٍ|إشعار قانوني|إجراء قانوني|الشرطة|النيابة|مخالفة|مخالفات مرورية|غرامة|تحصيل ديون|الجوازات|تأشيرة|التنفيذ)" }
+  ]
+}
