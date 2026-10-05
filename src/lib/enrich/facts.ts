@@ -1,4 +1,5 @@
 import type { Confidence } from "@prisma/client";
+import type { JurisdictionFactKey } from "@/lib/legal/jurisdiction";
 
 // Jurisdiction facts gathered during enrichment (00-brief §5 stage 5 inputs, 03-legal §5 "Inputs").
 // Enrichment only records facts; src/lib/legal turns them into laws.
@@ -12,15 +13,11 @@ import type { Confidence } from "@prisma/client";
 //   ksa_presence        "tld" | "arabic_site" | "cr_number" | "address"
 //   is_us_sender        true when a US postal address appears in the policy
 
-export type FactKey =
-  | "hq_country"
-  | "relevant_countries"
-  | "eu_establishment"
-  | "uk_establishment"
-  | "eu_rep"
-  | "uk_rep"
-  | "ksa_presence"
-  | "is_us_sender";
+// The legal step owns the fact vocabulary; enrichment writes a subset of it.
+export type FactKey = Extract<
+  JurisdictionFactKey,
+  "hq_country" | "relevant_countries" | "eu_establishment" | "uk_establishment" | "eu_rep" | "uk_rep" | "ksa_presence" | "is_us_sender"
+>;
 
 export type Fact = {
   key: FactKey;

@@ -1,9 +1,12 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { enqueueScanProcess, getBoss, QUEUES, type SyncJob } from "@/lib/jobs/queue";
+import { enqueueEnrich, enqueueScanProcess, getBoss, QUEUES, type SyncJob } from "@/lib/jobs/queue";
 import { resolvePending } from "@/lib/scan/resolve";
 import { classifySenders } from "@/lib/scan/classify";
 import { classifyUnsettled } from "@/lib/llm/classify-unsettled";
+import { enrichPending } from "@/lib/enrich/contacts";
+import { refreshDatasets } from "@/lib/enrich/datasets";
+import { applyJurisdiction } from "@/lib/legal/drafts";
 import { incrementalSync, initialSync } from "@/lib/mail/gmail-sync";
 import { outlookIncrementalSync, outlookInitialSync } from "@/lib/mail/outlook-sync";
 import { ReconnectRequiredError } from "@/lib/mail/accounts";
@@ -47,7 +50,20 @@ async function main() {
     // Makes no network call unless AI assist is on and the training opt-out is recorded.
     const llm = await classifyUnsettled();
     logger.info({ headers: stats.headers, senders: stats.senderIds.length, llm }, "scan processed");
+    await enqueueEnrich();
   });
+  await boss.work(QUEUES.enrich, async () => {
+    // Decided companies first (REMOVE/UNSUBSCRIBE), then undecided; KEEP is skipped.
+    const r = await enrichPending({ limit: 50 });
+    for (const id of r.ids) await applyJurisdiction(id);
+    logger.info({ enriched: r.enriched, failed: r.failed }, "enrich batch done");
+    if (r.enriched + r.failed === 50) await enqueueEnrich();
+  });
+  await boss.work(QUEUES.datasets, async () => {
+    const r = await refreshDatasets({ maxAgeDays: 7 });
+    logger.info({ refreshed: r.results.length, errors: r.errors.length }, "datasets refreshed");
+  });
+  await boss.schedule(QUEUES.datasets, "17 3 * * 0", {}, { tz });
   await boss.schedule(QUEUES.syncAll, "*/10 * * * *", {}, { tz });
 
   logger.info("worker started");

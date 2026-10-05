@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // E2E fixtures for the dev database: 2 mailboxes, 40 companies with evidence (mixed flags and
 // confidence), one company without evidence (must never render) and one personal sender.
 // Run directly with `npx tsx tests/e2e/seed.ts`, or via Playwright's global setup.

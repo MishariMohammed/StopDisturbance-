@@ -5,6 +5,8 @@ export const QUEUES = {
   syncIncremental: "sync.incremental",
   syncAll: "sync.all",
   scanProcess: "scan.process",
+  enrich: "enrich.pending",
+  datasets: "datasets.refresh",
 } as const;
 
 export type SyncJob = { accountId: string };
@@ -40,4 +42,9 @@ export async function enqueueInitialSync(accountId: string) {
 export async function enqueueScanProcess() {
   const b = await getBoss();
   return b.send(QUEUES.scanProcess, {}, { singletonKey: "scan", retryLimit: 2, retryBackoff: true });
+}
+
+export async function enqueueEnrich() {
+  const b = await getBoss();
+  return b.send(QUEUES.enrich, {}, { singletonKey: "enrich", retryLimit: 2, retryBackoff: true });
 }

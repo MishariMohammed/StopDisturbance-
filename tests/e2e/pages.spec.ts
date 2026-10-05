@@ -29,8 +29,8 @@ test("/scan shows per-account progress and refreshes itself", async ({ page }) =
 
 test("/connect first-run setup saves owner details with AI default Rules only", async ({ page }) => {
   await page.goto("/en/connect");
-  await expect(page.getByRole("radio", { name: /Rules only/ })).toBeChecked();
-  await expect(page.getByRole("radio", { name: /DeepSeek/ })).toBeDisabled();
+  await expect(page.getByRole("radio", { name: /^Rules only/ })).toBeChecked();
+  await expect(page.getByRole("radio", { name: /^DeepSeek/ })).toBeDisabled();
   await page.getByLabel("Your name as companies know you").fill("Mishari Test");
   await page.getByLabel("Country you live in").selectOption("SA");
   await page.getByRole("button", { name: "Save and continue" }).click();
@@ -48,19 +48,19 @@ test("/connect first-run setup saves owner details with AI default Rules only", 
 
 test("/settings refuses DeepSeek without the training opt-out confirmation", async ({ page }) => {
   await page.goto("/en/settings");
-  await page.getByRole("radio", { name: /DeepSeek/ }).check();
+  await page.getByRole("radio", { name: /^DeepSeek/ }).check();
   await page.getByRole("button", { name: "Save AI setting" }).click();
   await expect(page.getByRole("alert")).toContainText("DeepSeek stays off");
   await expect(page.getByText("Current mode:")).toContainText("Rules only");
 
-  await page.getByRole("radio", { name: /DeepSeek/ }).check();
+  await page.getByRole("radio", { name: /^DeepSeek/ }).check();
   await page.getByLabel("I turned off training in my DeepSeek account").check();
   await page.getByLabel("Date you turned it off").fill("2026-01-15");
   await page.getByRole("button", { name: "Save AI setting" }).click();
   await expect(page.getByRole("status").filter({ hasText: "DeepSeek is on" })).toBeVisible();
   await expect(page.getByText("Current mode:")).toContainText("DeepSeek");
 
-  await page.getByRole("radio", { name: /Rules only/ }).check();
+  await page.getByRole("radio", { name: /^Rules only/ }).check();
   await page.getByRole("button", { name: "Save AI setting" }).click();
   await expect(page.getByRole("status").filter({ hasText: "nothing will be sent to DeepSeek" })).toBeVisible();
 });
