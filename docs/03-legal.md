@@ -254,6 +254,41 @@ Placeholders: `{{full_name}}`, `{{email_addresses}}` (all addresses to search), 
 
 **[LAWYER]** A Saudi lawyer should review the Arabic legal phrasing and the article references (e.g. the Art. 33/34 numbering and the amended wording of Art. 26).
 
+### 6d. Stop-marketing only (English) — for the "Unsubscribe only" decision when no one-click/mailto channel exists
+
+*Added by manager review: assembled from 6a paragraphs 1 and 4. No new citations.*
+
+> **Subject:** Stop direct marketing to me — Ref {{reference_id}}
+>
+> To: {{company}} — Data Protection / Privacy Team ({{company_contact}})
+>
+> I, {{full_name}}, residing in {{country_of_residence}}, make this request under {{law_citations}}.
+>
+> I withdraw any consent I may have given and object to all processing of my personal data for advertising, direct marketing and related profiling. Stop all marketing communications to me immediately, by every channel. Keep my email addresses below only on a suppression list so that you do not contact me again.
+>
+> Confirm in writing when you have done this, within {{response_days}} days of receiving this request (by {{deadline_date}}).
+>
+> Email addresses this request covers: {{email_addresses}}
+>
+> {{full_name}}
+> {{date}}
+
+Arabic version: 6a-AR with only the subject line, paragraph 1 and paragraph 4 kept (subject: «طلب إيقاف الرسائل التسويقية — المرجع {{reference_id}}»). **[LAWYER]**
+
+### 6e. Reply to an identity-verification request (English)
+
+*Added by manager review: applies the §7 advice. No new citations.*
+
+> **Subject:** Re: {{original_subject}}
+>
+> This request was sent from {{email_addresses}}, the address you hold on file and send marketing to. Under {{law_citations}} you may ask only for the information necessary to confirm my identity. I can confirm control of this address by replying to a message you send to it or by clicking a confirmation link. {{optional_identifier_line}}
+>
+> Please proceed with my request (Ref {{reference_id}}) without further delay.
+>
+> {{full_name}}
+
+`{{optional_identifier_line}}` is filled only with an identifier the user chooses to add (e.g. an order number). Never ID documents by default (§7, M9).
+
 ---
 
 ## 7. Identity verification
@@ -299,7 +334,7 @@ These records support the reminder and complaint steps. Keep them while the case
 **Google / Microsoft constraints**
 - **Gmail API.** `gmail.readonly` and `gmail.metadata` are **restricted** scopes. `gmail.send` is **sensitive**.
   - Public apps need OAuth verification plus an annual **CASA security assessment** for restricted scopes, and must follow the **Google API Services User Data Policy / Limited Use** rules: use data only for user-facing features, no ads use, no human reading without consent, no transfer except as needed for the feature, and **no use to train generalised AI models**.
-  - **For personal use:** keep the OAuth app in **"Testing"** with the user as the only test user. Verification is not required, but **refresh tokens expire after 7 days**, so the user must re-consent weekly. Alternatively use an "Internal" app if the user has a Workspace domain. Sources: https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification ; https://developers.google.com/workspace/workspace-api-user-data-developer-policy ; https://support.google.com/cloud/answer/15549945
+  - **For personal use (decided in 00-review.md):** publish the OAuth consent screen **"In production" without submitting for verification** (personal-use exemption, <100 users; see 02-capabilities §1.6). Verification and CASA are not required, and refresh tokens do not hit the 7-day Testing expiry. **"Testing"** (user as the only test user, re-consent every 7 days) is the fallback only if Google blocks the production route. Use an "Internal" app if the user has a Workspace domain. **[VERIFY]** on day 1 that refresh tokens for restricted scopes survive >7 days in unverified production. Sources: https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification ; https://developers.google.com/workspace/workspace-api-user-data-developer-policy ; https://support.google.com/cloud/answer/15549945
   - Limited Use and DeepSeek: sending Gmail-derived data to a third-party LLM fits the Limited Use "transfer to provide user-facing features" category only if that LLM does not use the data for training. **DeepSeek trains on inputs by default.** For a self-use test app Google will not audit this, but **opt out of DeepSeek training** in any case (see §9).
 - **Microsoft Graph.** Use delegated `Mail.Read` / `Mail.Send` on a single-tenant or personal app registration. Publisher verification is needed only for multi-tenant distribution. Respect Outlook.com sending limits and anti-spam rules (Microsoft Services Agreement prohibits spam). Volumes here are small. **[VERIFY]** current daily recipient limits.
 - **Sending volume:** 1 request + 1 reminder per company is well below bulk-sender thresholds (Gmail bulk sender rules start at 5,000/day). Send plain, personalized messages; avoid identical blasts with BCC.
@@ -323,13 +358,13 @@ These records support the reminder and complaint steps. Keep them while the case
 
 **Minimization requirements (do these, and the issue largely disappears)**
 1. **Pre-filter locally, before any LLM call.** Exclude messages from personal correspondents: addresses in the user's contacts, free-mail domains (gmail.com, outlook.com, hotmail.com, yahoo.com, icloud.com, etc.), and threads where the user has replied. Send only messages that look like bulk/commercial mail (`List-Unsubscribe` header, ESP signatures, `Precedence: bulk`, known marketing domains).
-2. **Send only what the LLM needs:** sender domain, display name, subject, `List-Unsubscribe`, and a truncated or redacted footer (for the postal address). **No full bodies. No To/CC lists** (replace them with a placeholder such as `USER`).
+2. **Send only what the LLM needs:** sender domain, display name, up to 3 redacted subjects, and header flags (e.g. `List-Unsubscribe` present). **No bodies or footers** (v1 does not read scanned message bodies at all; see 00-brief §8). **No To/CC lists** (replace them with a placeholder such as `USER`).
 3. **Redact** the user's own name, phone and address in text sent to the LLM where they are not needed. Letters are filled from local templates, so the LLM never needs the user's identity.
 4. **Turn off DeepSeek training/"improve the model"** in account settings, if available for the API. Record the date it was switched off. **[VERIFY]** API-level opt-out mechanics.
 5. **Prefer deterministic code over the LLM** where possible (header parsing, domain-to-company lookup). Optional: support a local model, or a provider with no-training/zero-retention terms, as a drop-in alternative.
 
 **Hosting and security (good practice, not legal obligation)**
-- Encrypt OAuth tokens at rest. Use minimal scopes (prefer `gmail.metadata` + `gmail.send` over `gmail.readonly` if the footer can be skipped).
+- Encrypt OAuth tokens at rest. Scopes decided in 00-review.md: `gmail.readonly` + `gmail.send` (metadata cannot read replies). Scanning stays headers-only by code policy; bodies are read only for replies to the user's own requests.
 - Store no raw message bodies, only derived company records and evidence of the user's own requests.
 - Make the instance single-user and authenticated. Provide one-click "delete everything and revoke tokens".
 - A KSA-region or EU host is fine. Being the user's own data, there is no transfer issue beyond the third-party point above.
@@ -356,7 +391,7 @@ These records support the reminder and complaint steps. Keep them while the case
 - [ ] M9. ID handling: never auto-send ID documents. Warn when a company asks, and give redaction guidance.
 - [ ] M10. LLM minimization: local pre-filter to exclude personal correspondents; send only commercial-mail metadata; no To/CC; no full bodies; templates filled locally.
 - [ ] M11. Opt out of DeepSeek model training before first use, and record that it was done.
-- [ ] M12. Minimal OAuth scopes. Encrypted tokens. One-click delete-all + revoke.
+- [ ] M12. Only the decided OAuth scopes (00-review.md); headers-only scanning enforced in code. Encrypted tokens. One-click delete-all + revoke.
 - [ ] M13. Arabic + English output for PDPL letters. Arabic legal wording reviewed by Saudi counsel **[LAWYER]**.
 
 **SHOULD**

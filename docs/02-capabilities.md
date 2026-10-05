@@ -213,7 +213,7 @@ For each message, set three booleans (marketing, transactional, personal) plus a
 2. **marketing**: `List-Unsubscribe-Post: One-Click`, or `CATEGORY_PROMOTIONS`, or (List-Unsubscribe + an ESP marketing fingerprint + no transactional keywords).
 3. **transactional**: `CATEGORY_UPDATES`, `Auto-Submitted`, transactional ESP (Postmark/Mandrill/SES with no List-Unsubscribe), subject patterns (receipt, order, invoice, password, verification, shipped).
 4. Aggregate per sender (registrable domain): `marketing_ratio`, `has_one_click`, `first_seen`, `last_seen`, `msg_count`.
-   - Any sender with ≥1 message proves the company **holds your personal data** (at least your email address). That makes it a valid GDPR Art. 17 / CCPA deletion target even if it is transactional only.
+   - Any sender with ≥1 message proves the company **holds your personal data** (at least your email address). That makes it a valid PDPL Art. 4 destruction target (and GDPR Art. 17 where it has an EU establishment) even if it is transactional only. CCPA does not apply to a KSA resident (03-legal §3).
 5. Only send senders the rules can't settle to the LLM (§6). Expected: 10–25% of senders.
 
 ---
@@ -271,7 +271,7 @@ Source: https://www.rfc-editor.org/rfc/rfc8058
   - Follow ≤3 redirects, 10 s timeout, generic UA.
   - Success = any 2xx.
 - Log the URL host, status and timestamp. Never log full tokens in the URI, because they identify the user.
-- If only a `mailto:` is present, send the unsubscribe email from the user's mailbox. This is covered by `gmail.send`/`Mail.Send` and can be auto-approved in a batch.
+- If only a `mailto:` is present, send the unsubscribe email from the user's mailbox. This is covered by `gmail.send`/`Mail.Send`. Like every send and one-click POST, it is listed individually in the send confirmation and needs the owner's approval; there is no auto-approval (03-legal M4).
 - If only a plain `https:` URL is present without `-Post`, it is a landing page that may need a click or CAPTCHA, so use the guided flow below.
 - **SSRF guard**: resolve DNS and reject private, loopback and link-local IPs before POSTing.
 
@@ -352,7 +352,7 @@ Sources:
 | Ambiguous senders (no list headers, odd domains), brand-name normalisation, merging alias domains | — | ✅ `deepseek-flash`, non-thinking |
 | Sector tag (retail, data broker, finance…), "likely holds data beyond email" | — | ✅ flash |
 | Extract privacy contact from privacy-policy page text | regex first | ✅ flash fallback |
-| Draft deletion/stop-marketing letter | ✅ **legal templates** (deterministic, jurisdiction-specific) | Optional: flash fills company-specific fields / tone. **Never let the LLM invent legal citations** |
+| Draft deletion/stop-marketing letter | ✅ **legal templates** (deterministic, jurisdiction-specific) | **Not used in v1** (decided in 00-review.md): letters are 100% templates filled locally. **Never let the LLM invent legal citations** |
 | Classify company replies (§5.2) | keyword pre-filter | ✅ flash. Use `deepseek-v4-pro` for hard cases (refusals, ID-verification demands) |
 
 ### 6.3 Cost estimate: classify per unique sender, not per message
@@ -369,7 +369,7 @@ Assumptions:
 | `deepseek-v4-pro` | 0.36×1.32 + 0.12×3.96 ≈ **$0.95** | ≈ $0.48 |
 
 - Reply classification: ~200 replies × (1.5k in + 100 out) on flash ≈ **$0.12**.
-- Letter personalisation: ~300 letters × (1k in + 500 out) ≈ **$0.27**.
+- Letter personalisation: ~300 letters × (1k in + 500 out) ≈ **$0.27** (not used in v1; letters are templates only).
 - **Total LLM spend per full run: under $1 on flash.** Cost is not a constraint.
 - Schedule bulk classification jobs in off-peak hours anyway (it's free to do).
 - Tokenizer differences mean ±30% on these numbers.
@@ -397,7 +397,7 @@ Sources: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html, h
   - Send the reply body only after stripping quoted text, signatures and PII (the owner's name/email/phone/address, case numbers).
   - Alternative: run it rules-only and show the reply to the owner.
   - Make "send replies to LLM" a **setting, default OFF**.
-- **Letters:** generate from local templates. Send only `{company_name, sector, jurisdiction}` to the LLM, never the owner's identity. Merge the identity locally afterwards.
+- **Letters:** generated from local templates only. v1 sends nothing about letters to the LLM, and never the owner's identity.
 - If PRC processing is unacceptable, swap providers by changing `base_url` + model: same OpenAI-compatible code, e.g. DeepSeek models hosted by a US/EU cloud, or any other OpenAI-compatible endpoint. Keep the provider behind an `LlmClient` interface.
 
 ### 7.2 Google Limited Use (applies to unverified/personal apps too)
@@ -424,7 +424,7 @@ Sources: https://developers.google.com/terms/api-services-user-data-policy, http
   - Do not store bodies, except for replies to our own requests (needed as legal evidence). Store those encrypted.
 - **Retention:**
   - Raw per-message header rows: 90 days after the scan, then collapse to sender aggregates.
-  - Sent requests, replies and their timestamps: keep until the case is closed + 3 years (evidence of the request). Make this configurable.
+  - Sent requests, replies and their timestamps: keep until the case is closed + 1 year (03-legal §8), configurable up to 3 years.
   - LLM payloads: don't persist; log only token counts.
 - **Audit log** (append-only table): connect/disconnect mailbox, scan start/end, each send (to, company, template version, message IDs), each one-click POST (host, status), LLM call (model, tokens, payload hash, *not* payload), settings changes.
 - **Account / data deletion ("disconnect & wipe"):**
@@ -436,8 +436,8 @@ Sources: https://developers.google.com/terms/api-services-user-data-policy, http
   - Optionally add a passkey or TOTP, or put the app behind Cloudflare Access / Tailscale for zero public exposure.
 - **Outbound safety:**
   - Sends require explicit approval: a batch approve screen showing the exact rendered email.
-  - Rate-limit to ≤1 send / 30 s.
-  - Use a hard daily cap (e.g. 100) to protect the owner's account reputation.
+  - Rate-limit to ≤1 send / 30 s per mailbox (30–60 s jitter).
+  - Hard daily cap: **50 per mailbox per day** (aligned with 04-ux §5.7), to protect the owner's account reputation.
 
 ---
 
@@ -456,7 +456,7 @@ Constraints:
 | GCP Cloud Run (web) + Cloud Run worker (min-instances=1, CPU always on) + Cloud SQL + Cloud KMS | Good if you want Gmail Pub/Sub push + KMS in one place. More setup. Overkill for one user |
 | Home server / VPS + Caddy | Cheapest and most private (data never leaves your box, except API calls). Requires you to patch/back it up yourself. Pair with Tailscale/Cloudflare Tunnel |
 
-Pick **Railway or Fly.io**, with daily Postgres backups enabled, secrets in the platform secret store, and a single region close to the owner.
+Pick **Railway** (decided in 00-review.md; Fly.io is the fallback), with daily Postgres backups enabled, secrets in the platform secret store, and a single region close to the owner.
 
 ---
 
@@ -465,7 +465,7 @@ Pick **Railway or Fly.io**, with daily Postgres backups enabled, secrets in the 
 | Capability | How | Dependency | Risk | v1 / later |
 |---|---|---|---|---|
 | Connect Gmail (long-lived) | OAuth External + **In production, unverified** (or Internal for Workspace). Scopes `gmail.readonly` + `gmail.send`, offline | GCP project | Unverified warning (cosmetic). Token revoked on Google password change → re-connect UX | v1 |
-| Connect Outlook.com | Entra app (`PersonalMicrosoftAccount` or `AzureADandPersonalMicrosoftAccount`), Web redirect, `Mail.Read Mail.Send offline_access` | Entra tenant owned by user | 90-day rolling RT. Must persist rotated RT | v1 |
+| Connect Outlook.com | Entra app (`AzureADandPersonalMicrosoftAccount`, authority `/common`, tenant allow-list = consumer tenant + owner's own tenant), Web redirect, `Mail.Read Mail.Send offline_access` | Entra tenant owned by user | 90-day rolling RT. Must persist rotated RT | v1 |
 | Connect work M365 mailbox | Same app. Admin consent | Tenant admin | **Blocked by default** under the Microsoft-managed consent policy unless the owner is admin | Later (only if owner is admin) |
 | Header scan + incremental sync | Gmail `messages.list`/`get(format=metadata)` batched ≤50, then `history.list` polling. Graph per-folder `delta` + per-message `$select=internetMessageHeaders` | pg-boss worker | Quota throttling (design for 6k units/min/user). historyId 404 → full resync. `internetMessageHeaders` on list/ReadBasic unverified | v1 |
 | Classify per message (rules) | List-Unsubscribe, -Post, List-Id, Precedence, Feedback-ID, Auto-Submitted, Gmail categories, Outlook focused/junk, ESP fingerprints | `esp-fingerprints.json` | ESP fingerprints drift → test fixtures | v1 |
@@ -473,7 +473,7 @@ Pick **Railway or Fly.io**, with daily Postgres backups enabled, secrets in the 
 | LLM classify ambiguous senders | DeepSeek `deepseek-flash`, non-thinking, JSON mode, 50 senders/request, cached prefix, off-peak | DeepSeek key | PRC data processing; model renames (legacy names already retired) | v1 |
 | Logos | Server-side favicon fetch + cache | none | Low quality icons | v1 (Logo.dev later) |
 | Privacy contact discovery | Fetch privacy page → regex → LLM fallback. Manual override | Outbound HTTP | Wrong address → bounce detection + manual edit | v1 |
-| Draft legal requests | Deterministic templates per jurisdiction (GDPR/UK GDPR/CCPA…). LLM fills only company fields | Legal doc (03) | Hallucinated law → never let LLM write citations | v1 |
+| Draft legal requests | Deterministic templates per jurisdiction (PDPL base, plus GDPR/UK GDPR/CAN-SPAM per 03-legal §5). No LLM in letters in v1 | Legal doc (03) | Hallucinated law → never let LLM write citations | v1 |
 | Send from user's mailbox | Gmail `messages.send` (raw MIME). Graph draft → send to capture `internetMessageId` | Scopes above | Account reputation → approve + rate cap | v1 |
 | RFC 8058 one-click unsubscribe | Server POST `List-Unsubscribe=One-Click`, no cookies, DKIM-coverage check, SSRF guard | none | Fake/abused endpoints → only DKIM-pass senders | v1 |
 | mailto unsubscribe | Auto-send from user mailbox | send scope | Low | v1 |
@@ -493,9 +493,9 @@ Pick **Railway or Fly.io**, with daily Postgres backups enabled, secrets in the 
 | Next.js App Router + TypeScript + Tailwind | **Confirm** | Fine for a single-user dashboard. Use `output: "standalone"` for the Docker image |
 | Postgres + Prisma | **Confirm** | Use the direct URL for the worker. Store encrypted token blobs as `Bytes` |
 | pg-boss | **Confirm** | Uses `SKIP LOCKED` polling, no external Redis. Needs a persistent worker → hosts that support it (§8). Use `schedule()` for polling/deadline crons |
-| Auth.js (Google + Entra) | **Amend** | Auth.js has been in **maintenance mode under Better Auth since Sept 2025** (security fixes only). Source: https://www.better-auth.com/blog/authjs-joins-better-auth. Use it (or Better Auth) **only for app login with an owner allow-list**. Implement **mailbox connections as separate OAuth flows** with `google-auth-library` and `@azure/msal-node` (or `openid-client`), so you control offline access, incremental scopes, RT rotation and encrypted storage. Auth.js does not refresh/rotate provider tokens for you and stores them in plaintext in the `Account` table |
+| Auth.js (Google + Entra) | **Amend → Better Auth** (decided in 00-review.md) | Auth.js has been in **maintenance mode under Better Auth since Sept 2025** (security fixes only). Source: https://www.better-auth.com/blog/authjs-joins-better-auth. Use it (or Better Auth) **only for app login with an owner allow-list**. Implement **mailbox connections as separate OAuth flows** with `google-auth-library` and `@azure/msal-node` (or `openid-client`), so you control offline access, incremental scopes, RT rotation and encrypted storage. Auth.js does not refresh/rotate provider tokens for you and stores them in plaintext in the `Account` table |
 | Claude API | **Replaced by DeepSeek** (user decision) | Use the `openai` SDK with `baseURL=https://api.deepseek.com`, model `deepseek-flash`. Keep an `LlmClient` interface so the provider can be swapped (privacy, §7.1) |
-| Hosting (unspecified / Vercel) | **Amend → Railway or Fly.io** single image (web + worker) + managed Postgres | Long scans + persistent worker. One vendor for a single user |
+| Hosting (unspecified / Vercel) | **Amend → Railway** (Fly.io fallback) single image (web + worker) + managed Postgres | Long scans + persistent worker. One vendor for a single user |
 | Add: `tldts` | New | PSL-based registrable domain |
 | Add: `zod` | New | Validate LLM JSON output and API payloads |
 | Add: `mailparser`/`mimetext` (or `nodemailer`'s MailComposer) | New | Build RFC 5322 raw MIME for Gmail send with custom Message-ID/References |
