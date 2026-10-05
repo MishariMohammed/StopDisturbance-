@@ -358,7 +358,7 @@
   },
   "settings": {
     "title": "Settings",
-    "lead": "More settings (mailboxes, notifications, your data) arrive in later versions.",
+    "lead": "Mailboxes, AI assist, notifications and how long the app keeps data. Export and erase are under “Your data”.",
     "ai": {
       "title": "AI assist",
       "current": "Current mode:",
@@ -380,13 +380,25 @@
         "saved_rules": "Rules only — nothing will be sent to DeepSeek.",
         "saved_deepseek": "DeepSeek is on. Your opt-out date is recorded.",
         "opt_out_required": "DeepSeek stays off: tick the training opt-out confirmation first.",
-        "bad_date": "DeepSeek stays off: enter the date you turned training off (not in the future)."
+        "bad_date": "DeepSeek stays off: enter the date you turned training off (not in the future).",
+        "connection_test_required": "DeepSeek stays off: run “Test connection” and make sure it passes first."
       },
       "disclosureTitle": "What is sent to DeepSeek",
       "sentTitle": "Sent",
       "sent": "Sender display names · sender domains · up to 3 redacted subject lines per company · header flags · public privacy-policy text.",
       "neverTitle": "Never sent",
-      "never": "Email bodies · attachments · your name, email or phone · other contacts · OAuth tokens · ID numbers · letters."
+      "never": "Email bodies · attachments · your name, email or phone · other contacts · OAuth tokens · ID numbers · letters.",
+      "lockedHelp": "DeepSeek can be chosen once “Test connection” passes with the current key.",
+      "test": {
+        "button": "Test connection",
+        "help": "Checks the key by listing models at the API address. Nothing except the key is sent.",
+        "ok": "Connection works. DeepSeek can now be turned on.",
+        "failed": "The connection test failed. Check the key and LLM_BASE_URL, then try again.",
+        "no_key": "No API key is set (DEEPSEEK_API_KEY), so there is nothing to test.",
+        "passedOn": "Reachable · tested {date}",
+        "notPassed": "Last test did not pass for the current key",
+        "never": "Not tested yet"
+      }
     },
     "arabic": {
       "title": "Arabic letters",
@@ -403,6 +415,91 @@
         "saved_off": "New drafts will be in English only.",
         "confirm_required": "Not changed: tick the confirmation box to turn Arabic letters on."
       }
+    },
+    "sectionsLabel": "More settings",
+    "dataLink": "Your data: download or erase everything",
+    "mailboxes": {
+      "title": "Mailboxes",
+      "none": "No mailbox connected.",
+      "read": "Read headers",
+      "send": "Send",
+      "noSend": "No send permission",
+      "status": {
+        "active": "Connected",
+        "needsReconnect": "Reconnect needed",
+        "disconnected": "Disconnected"
+      },
+      "gmailToken": "Gmail token:",
+      "token": "Access:",
+      "lastRefreshed": "OK · last refreshed {date}",
+      "notRefreshed": "OK · not refreshed yet",
+      "testingMode": "The Google project is in Testing mode: Google ends access 7 days after you connect. Publish it to production (see the setup checklist).",
+      "reconnect": "Reconnect",
+      "disconnect": "Disconnect…",
+      "disconnectBody": "Disconnect this mailbox? Scanning and reply tracking stop for it. The app revokes its access and deletes the email headers it stored from this mailbox.",
+      "disconnectConfirm": "Yes, disconnect this mailbox",
+      "disconnectButton": "Disconnect",
+      "connectAnother": "+ Connect another mailbox",
+      "msConsent": "Microsoft has no way for the app to revoke access itself: remove “StopDisturbance” at account.live.com/consent/Manage.",
+      "outcome": {
+        "disconnected": "Mailbox disconnected. Access was revoked and its headers were deleted.",
+        "disconnected_ms": "Mailbox disconnected and its headers were deleted. One more step below.",
+        "confirm_required": "Not disconnected: tick the confirmation box first.",
+        "not_found": "That mailbox no longer exists."
+      }
+    },
+    "replyAi": {
+      "title": "Reply classification by AI",
+      "current": "Status:",
+      "on": "On",
+      "off": "Off (default)",
+      "warning": "When this is on, the text of replies from companies is sent to DeepSeek after quotes, signatures, addresses, phone numbers and your name are stripped. It only works while AI assist is set to DeepSeek. The keyword classifier works without it.",
+      "check": "Use AI to suggest what a company's reply means",
+      "ack": "I understand that stripped reply text will be sent to DeepSeek (needed to turn this on)",
+      "save": "Save reply setting",
+      "outcome": {
+        "saved_on": "Reply classification by AI is on.",
+        "saved_off": "Reply classification by AI is off. Replies are classified by keywords only.",
+        "ack_required": "Not changed: tick the acknowledgement to turn reply AI on."
+      }
+    },
+    "aiLog": {
+      "title": "Last 20 AI calls",
+      "help": "What was sent, so you can check the list above is true. Values stay hidden until you show them; payloads are kept 7 days at most.",
+      "none": "No AI calls yet.",
+      "reveal": "Show sent values",
+      "hide": "Hide sent values",
+      "purpose": "purpose: {purpose}",
+      "tokens": "{count} tokens",
+      "ok": "OK",
+      "failed": "Failed",
+      "fields": "Fields:",
+      "noSample": "Payload no longer kept (older than 7 days or beyond the last 20)."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "help": "Sent from your own mailbox to yourself.",
+      "digest": "Weekly digest (Sunday 09:00)",
+      "instant": "Instant alerts",
+      "kinds": {
+        "replyReceived": "A company replied",
+        "needsAction": "Something needs your action",
+        "overdue": "A request is overdue",
+        "deadlineSoon": "A deadline is close",
+        "sendFailed": "A send failed",
+        "mailboxDisconnected": "A mailbox needs reconnecting"
+      },
+      "save": "Save notifications",
+      "saved": "Notification settings saved."
+    },
+    "retention": {
+      "title": "Keeping closed requests",
+      "help": "Closed requests, with their letters, replies and evidence, are deleted this long after they close. Email headers are always deleted after 90 days.",
+      "label": "Keep closed requests for",
+      "years": "{count, plural, =1 {1 year} other {{count} years}}",
+      "save": "Save",
+      "saved": "Saved.",
+      "invalid": "Choose 1, 2 or 3 years."
     }
   },
   "whatWeSee": {
@@ -852,5 +949,40 @@
     "availableFrom": "Available from {date}",
     "reminderFrom": "Reminder available from {date}",
     "sdaia": "SDAIA"
+  },
+  "settingsData": {
+    "title": "Your data",
+    "back": "← Settings",
+    "stored": {
+      "title": "What the app stores",
+      "counts": "{companies} companies · {requests} requests · {subjects} subject lines",
+      "retention": "Email headers and subject lines are deleted automatically {days} days after the scan."
+    },
+    "export": {
+      "title": "Download my data",
+      "help": "A JSON file with everything the app stores about you. It never includes access tokens or encrypted data.",
+      "button": "Download my data (JSON)",
+      "withReplies": "Download with reply texts"
+    },
+    "erase": {
+      "title": "Erase all app data and start over?",
+      "body": "Your sent requests stay in your mailbox. The app revokes its access and erases everything it stored.",
+      "revokes": "Revokes access to mailboxes: {n}",
+      "deletes": "Deletes {companies} companies and {requests} request records",
+      "stopsTracking": "Stops tracking open requests: {n} (they stay in your Sent folder)",
+      "irreversible": "Cannot be undone",
+      "keepSentAudit": "Keep the audit log of requests that were actually sent (proof of what you sent and when)",
+      "typeLabel": "Type {word} to confirm",
+      "typeHelp": "Type or paste {word} exactly.",
+      "wrongWord": "Not erased: type {word} to confirm.",
+      "button": "Erase everything",
+      "erasing": "Erasing…",
+      "done": "Everything was erased.",
+      "doneRevoked": "Google access revoked for {revoked} of {total} mailboxes.",
+      "doneKept": "Audit rows kept for sent requests: {count}",
+      "msConsentLead": "For Outlook / Hotmail, remove the app's access yourself:",
+      "msConsentLink": "Microsoft account → Apps and services (account.live.com/consent/Manage)",
+      "startOver": "Start over"
+    }
   }
 }
