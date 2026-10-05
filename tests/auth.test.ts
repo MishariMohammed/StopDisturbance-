@@ -17,10 +17,10 @@ describe("owner allow-list", () => {
   it("rejects a non-owner at user creation (403)", async () => {
     const hook = auth().options.databaseHooks!.user!.create!.before!;
     await expect(
-      hook({ id: "u1", email: "intruder@gmail.com", name: "x", emailVerified: true, createdAt: new Date(), updatedAt: new Date() }, null),
+      hook({ id: "u1", email: "intruder@gmail.com", name: "x", emailVerified: true, createdAt: new Date(), updatedAt: new Date() }),
     ).rejects.toMatchObject({ statusCode: 403 });
     await expect(
-      hook({ id: "u2", email: "owner@gmail.com", name: "o", emailVerified: true, createdAt: new Date(), updatedAt: new Date() }, null),
+      hook({ id: "u2", email: "owner@gmail.com", name: "o", emailVerified: true, createdAt: new Date(), updatedAt: new Date() }),
     ).resolves.toBeUndefined();
   });
 
@@ -28,7 +28,7 @@ describe("owner allow-list", () => {
     await db.user.create({ data: { id: "u3", email: "former@gmail.com", name: "f" } });
     const hook = auth().options.databaseHooks!.session!.create!.before!;
     await expect(
-      hook({ id: "s", userId: "u3", token: "t", expiresAt: new Date(), createdAt: new Date(), updatedAt: new Date() }, null),
+      hook({ id: "s", userId: "u3", token: "t", expiresAt: new Date(), createdAt: new Date(), updatedAt: new Date() }),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
