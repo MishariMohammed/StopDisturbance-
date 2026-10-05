@@ -102,7 +102,7 @@ test("merge and split work with the keyboard only", async ({ page }) => {
   await row(page, "noon.com").getByRole("button", { name: /Why it's here/ }).focus();
   await page.keyboard.press("Enter");
   const drawer = page.getByRole("dialog", { name: "Noon" });
-  await expect(drawer.getByText("noon.ae")).toBeVisible();
+  await expect(drawer.locator("bdi", { hasText: "noon.ae" })).toBeVisible();
   await drawer.getByRole("button", { name: "Split out noon.ae" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status").filter({ hasText: "noon.ae is now listed as its own company." })).toBeVisible();

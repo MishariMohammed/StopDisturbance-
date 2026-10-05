@@ -50,7 +50,7 @@ test("/settings refuses DeepSeek without the training opt-out confirmation", asy
   await page.goto("/en/settings");
   await page.getByRole("radio", { name: /^DeepSeek/ }).check();
   await page.getByRole("button", { name: "Save AI setting" }).click();
-  await expect(page.getByRole("alert")).toContainText("DeepSeek stays off");
+  await expect(page.getByRole("alert").filter({ hasText: "DeepSeek stays off" })).toBeVisible();
   await expect(page.getByText("Current mode:")).toContainText("Rules only");
 
   await page.getByRole("radio", { name: /^DeepSeek/ }).check();

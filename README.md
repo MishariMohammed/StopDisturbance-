@@ -10,8 +10,8 @@ Specs live in `docs/`. Start with `docs/00-brief.md`.
 |---|---|
 | M1 Skeleton, owner login, Gmail sync | done |
 | M2 Outlook, resolve, classify | done |
-| M3 Company list UI | next |
-| M4 Contacts, jurisdiction, drafts, review | |
+| M3 Company list UI | done |
+| M4 Contacts, jurisdiction, drafts, review | backend done, /review page next |
 | M5 Send, unsubscribe, tracker | |
 | M6 Hardening | |
 

@@ -417,7 +417,8 @@ function CompanyItem({
             <p className="mt-1 truncate text-sm">
               {row.subjects.slice(0, 2).map((s, i) => (
                 <span key={i}>
-                  {i > 0 && " · "}“<bdi dir="auto">{s}</bdi>”
+                  {i > 0 && " · "}
+                  <bdi dir="auto">&quot;{s}&quot;</bdi>
                 </span>
               ))}
             </p>
