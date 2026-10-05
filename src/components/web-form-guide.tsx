@@ -71,7 +71,7 @@ export function WebFormGuide({
             ))}
             <li>
               <span className="font-medium">{t("field.request")}:</span>
-              <pre dir="auto" className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface p-2 font-sans text-sm">
+              <pre tabIndex={0} aria-label={t("field.request")} dir="auto" className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface p-2 font-sans text-sm">
                 {requestText}
               </pre>
               <CopyButton text={requestText} label={t("copyField", { field: t("field.request") })} />

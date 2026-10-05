@@ -27,7 +27,8 @@ export const TONE_CLASSES: Record<Tone, string> = {
   neutral: "border-border-strong bg-surface-2 text-text",
   info: "border-info bg-info-bg text-info",
   warning: "border-warning bg-warning-bg text-warning",
-  success: "border-success bg-success-bg text-success",
+  // Success text on its tint is just under 4.5:1 at text-sm, so the label uses the body colour.
+  success: "border-success bg-success-bg text-text",
   danger: "border-danger bg-danger-bg text-danger",
   escalated: "border-escalated bg-escalated-bg text-escalated",
 };

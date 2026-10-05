@@ -31,7 +31,7 @@ test("list view approves per row only; there is no approve-all", async ({ page }
   await page.getByRole("checkbox", { name: "Approve Noon" }).check();
   await expect(page.getByText("1 approved", { exact: true })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Approve مكتبة جرير" })).not.toBeChecked();
-  expect(await statusOf("SD-NOON")).toBe("APPROVED");
+  await expect.poll(() => statusOf("SD-NN01")).toBe("APPROVED");
   expect(await statusOf("SD-JRR1")).toBe("DRAFT");
 
   // Expanding a row shows the full text.
@@ -41,7 +41,7 @@ test("list view approves per row only; there is no approve-all", async ({ page }
   // Unticking clears that row's approval.
   await page.getByRole("checkbox", { name: "Approve Noon" }).uncheck();
   await expect(page.getByText("0 approved", { exact: true })).toBeVisible();
-  expect(await statusOf("SD-NOON")).toBe("DRAFT");
+  await expect.poll(() => statusOf("SD-NN01")).toBe("DRAFT");
 });
 
 test("editing after approval clears the approval; guardrails and diff", async ({ page }) => {
@@ -58,9 +58,9 @@ test("editing after approval clears the approval; guardrails and diff", async ({
   await expect(page.getByRole("status").filter({ hasText: "Noon: approved." })).toBeVisible();
   await queue(page).getByRole("button", { name: /Noon/ }).click();
   await expect(editor(page).getByText("Approved. Editing the letter clears the approval.")).toBeVisible();
-  expect(await statusOf("SD-NOON")).toBe("APPROVED");
+  expect(await statusOf("SD-NN01")).toBe("APPROVED");
 
-  const body = editor(page).getByLabel("Letter");
+  const body = editor(page).getByRole("textbox", { name: "Letter" });
   const text = await body.inputValue();
   await body.fill(text.replace(/Under the Saudi Personal Data Protection Law \(Royal Decree M\/19\), Arts\. 4, 5 and 18, /, "") + "\nMy ID is 1012345678.\n");
   // Client-side guardrail before saving.
@@ -70,8 +70,8 @@ test("editing after approval clears the approval; guardrails and diff", async ({
   await expect(page.getByRole("status").filter({ hasText: "Your edit cleared the approval" })).toBeVisible();
   await expect(editor(page).locator('[data-warning="citation_removed"]')).toBeVisible();
   await expect(editor(page).getByRole("button", { name: "Approve" })).toBeVisible();
-  expect(await statusOf("SD-NOON")).toBe("DRAFT");
-  const out = await withDb((db) => db.request.findUniqueOrThrow({ where: { reference: "SD-NOON" } }).then((r) => db.outboundMessage.findFirstOrThrow({ where: { requestId: r.id } })));
+  expect(await statusOf("SD-NN01")).toBe("DRAFT");
+  const out = await withDb((db) => db.request.findUniqueOrThrow({ where: { reference: "SD-NN01" } }).then((r) => db.outboundMessage.findFirstOrThrow({ where: { requestId: r.id } })));
   expect(out.approvedHash).toBeNull();
 
   // Diff against the generated text, with text labels (not colour alone).
@@ -82,7 +82,7 @@ test("editing after approval clears the approval; guardrails and diff", async ({
   // Reset restores the original.
   await editor(page).getByRole("button", { name: "Reset to original" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Restored the original text." })).toBeVisible();
-  await expect(editor(page).getByLabel("Letter")).toHaveValue(text);
+  await expect(editor(page).getByRole("textbox", { name: "Letter" })).toHaveValue(text);
 });
 
 test("send confirmation names the count, mailbox and every recipient; undo cancels", async ({ page }) => {
@@ -105,10 +105,10 @@ test("send confirmation names the count, mailbox and every recipient; undo cance
 
   await dialog.getByRole("button", { name: "Send 3 requests" }).click();
   await expect(page.getByRole("status").filter({ hasText: /Sending 3 requests in \d+s|Paused/ })).toBeVisible();
-  expect(await statusOf("SD-NOON")).toBe("QUEUED");
+  await expect.poll(() => statusOf("SD-NN01")).toBe("QUEUED");
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Sending stopped for 3 requests" })).toBeVisible();
-  for (const ref of ["SD-NOON", "SD-JRR1", "SD-CRM1"]) expect(await statusOf(ref)).toBe("APPROVED");
+  for (const ref of ["SD-NN01", "SD-JRR1", "SD-CRM1"]) await expect.poll(() => statusOf(ref)).toBe("APPROVED");
 });
 
 test("web form: copy block and “I submitted it” starts the clock", async ({ page }) => {

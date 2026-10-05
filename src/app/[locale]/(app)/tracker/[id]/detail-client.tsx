@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import type { EscalationPacket, TrackerDetail, TrackerReply } from "@/lib/track/actions";
 import type { Plain } from "@/lib/tracker-view/plain";
@@ -263,7 +263,7 @@ function ReplyCard({
             {t("detail.showFull")}
           </button>
         ) : (
-          <pre dir="auto" className="mt-1 max-h-80 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface-2 p-2 font-sans text-sm">{full}</pre>
+          <pre tabIndex={0} aria-label={t("detail.showFull")} dir="auto" className="mt-1 max-h-80 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface-2 p-2 font-sans text-sm">{full}</pre>
         )}
       </div>
       {suggested && (
@@ -378,22 +378,25 @@ function EscalationWizard({
   const t = useTranslations("tracker.wizard");
   const te = useTranslations("tracker");
   const [lang, setLang] = useState<"en" | "ar">(locale === "ar" ? "ar" : "en");
-  const [packet, setPacket] = useState<EscalationPacket | null>(null);
-  const [loadedLang, setLoadedLang] = useState<string | null>(null);
-  const [error, setError] = useState("");
-  const [loading, startLoad] = useTransition();
+  const [result, setResult] = useState<{ lang: string; packet: EscalationPacket | null; error: string } | null>(null);
   const [ref, setRef] = useState(d.complaintRef ?? "");
 
-  if (loadedLang !== lang && !loading) {
-    setLoadedLang(lang);
-    startLoad(async () => {
-      const res = await escalationPacketAction(locale, d.requestId, lang);
-      if (res.ok) {
-        setPacket(res.packet);
-        setError("");
-      } else setError(te.has(`errors.${res.error}`) ? te(`errors.${res.error}`) : te("errors.failed"));
+  useEffect(() => {
+    let live = true;
+    escalationPacketAction(locale, d.requestId, lang).then((res) => {
+      if (!live) return;
+      setResult(
+        res.ok
+          ? { lang, packet: res.packet, error: "" }
+          : { lang, packet: null, error: te.has(`errors.${res.error}`) ? te(`errors.${res.error}`) : te("errors.failed") },
+      );
     });
-  }
+    return () => {
+      live = false;
+    };
+  }, [lang, locale, d.requestId, te]);
+  const packet = result?.lang === lang ? result.packet : null;
+  const error = result?.lang === lang ? result.error : "";
 
   return (
     <div className="flex flex-col gap-4">
@@ -434,7 +437,7 @@ function EscalationWizard({
           </section>
           <section aria-labelledby="wiz-2">
             <h3 id="wiz-2" className="font-semibold">{t("step2")}</h3>
-            <pre lang={lang} dir="auto" data-testid="complaint-text" className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface-2 p-2 font-sans text-sm">
+            <pre tabIndex={0} aria-labelledby="wiz-2" lang={lang} dir="auto" data-testid="complaint-text" className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface-2 p-2 font-sans text-sm">
               {packet.complaintText}
             </pre>
             <CopyButton text={packet.complaintText} label={t("copy")} />

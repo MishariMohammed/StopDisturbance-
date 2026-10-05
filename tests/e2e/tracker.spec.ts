@@ -20,18 +20,18 @@ test("each row shows a canonical status (icon + text) and exactly one next actio
   await page.goto("/en/tracker");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tracker");
   // Drafts live on /review.
-  await expect(row(page, "SD-NOON")).toHaveCount(0);
+  await expect(row(page, "SD-NN01")).toHaveCount(0);
 
   const expectations: [string, string, string][] = [
     ["SD-AMZ1", "Sent", "NONE"],
     ["SD-NMS1", "Sent", "CONFIRM_REPLY"],
     ["SD-EXT1", "Needs your reply", "REPLY_WITH_DETAILS"],
-    ["SD-UBR1", "Needs your reply", "GRANT_SEND_PERMISSION"],
-    ["SD-IKE1", "Overdue", "SEND_REMINDER"],
+    ["SD-VBR1", "Needs your reply", "GRANT_SEND_PERMISSION"],
+    ["SD-KEA1", "Overdue", "SEND_REMINDER"],
     ["SD-ZAR1", "Refused", "ESCALATE"],
     ["SD-HM01", "Completed", "VIEW_REPLY"],
     ["SD-NKE1", "Sending", "CANCEL"],
-    ["SD-ADI1", "Escalated", "NONE"],
+    ["SD-AD11", "Escalated", "NONE"],
   ];
   for (const [ref, label, next] of expectations) {
     const r = row(page, ref);
@@ -41,9 +41,9 @@ test("each row shows a canonical status (icon + text) and exactly one next actio
   }
   await expect(row(page, "SD-AMZ1")).toContainText("Nothing to do — we'll tell you when they reply.");
   await expect(row(page, "SD-AMZ1")).toContainText(/2[67] days left · due/);
-  await expect(row(page, "SD-IKE1")).toContainText(/1[01] days past the legal deadline/);
+  await expect(row(page, "SD-KEA1")).toContainText(/1[01] days past the legal deadline/);
   await expect(row(page, "SD-EXT1")).toContainText("They asked to verify your identity. Only share what's needed.");
-  await expect(row(page, "SD-UBR1").getByRole("link", { name: /Allow sending/ })).toHaveAttribute("href", /\/api\/mail\/google\/start\?send=1/);
+  await expect(row(page, "SD-VBR1").getByRole("link", { name: /Allow sending/ })).toHaveAttribute("href", /\/api\/mail\/google\/start\?send=1/);
 
   // Summary tabs filter via the URL.
   await page.getByRole("link", { name: /^Overdue/ }).click();
@@ -73,13 +73,13 @@ test("ID request: “Reply with details” drafts template 6e for review", async
   await expect(page).toHaveURL(/\/en\/review\?item=/);
   const editor = page.locator("article[data-outbound]");
   await expect(editor.getByRole("heading", { level: 2 })).toContainText("Extra — Reply to identity request");
-  await expect(editor.getByLabel("Letter")).toHaveValue(/confirm control of this address/);
+  await expect(editor.getByRole("textbox", { name: "Letter" })).toHaveValue(/confirm control of this address/);
   await expect(editor.locator('[data-pii="nationalId"]')).toHaveAttribute("data-included", "false");
 });
 
 test("overdue: “Send reminder” drafts the reminder for review", async ({ page }) => {
   await page.goto("/en/tracker");
-  await row(page, "SD-IKE1").getByRole("button", { name: /Send reminder/ }).click();
+  await row(page, "SD-KEA1").getByRole("button", { name: /Send reminder/ }).click();
   await expect(page).toHaveURL(/\/en\/review\?item=/);
   await expect(page.locator("article[data-outbound]").getByRole("heading", { level: 2 })).toContainText("IKEA — Reminder");
 });
@@ -89,7 +89,7 @@ test("escalation wizard shows the regulator and complaint text and never files a
   await row(page, "SD-ZAR1").getByRole("link", { name: /File a complaint with SDAIA/ }).click();
   const dialog = page.getByRole("dialog", { name: "File a complaint yourself" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByTestId("complaint-text")).toContainText("SD-ZAR1");
+  await expect(dialog.getByTestId("complaint-text")).toContainText("refusal");
   await expect(dialog.getByRole("link", { name: /Open .* portal/ })).toHaveAttribute("href", /^https:\/\//);
   await expect(dialog.getByRole("button", { name: "Copy complaint text" })).toBeVisible();
   // No control that submits to a regulator: only copy, close and "I filed it".

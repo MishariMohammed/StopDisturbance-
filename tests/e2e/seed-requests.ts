@@ -101,8 +101,8 @@ export async function seedRequests(db: PrismaClient, ids: Ids, boxes: Boxes) {
   // ---- /review drafts ----
   // Noon: privacy email draft from Gmail (no send permission yet).
   const noonC = await contact("noon.com", "PRIVACY_EMAIL", "privacy@noon.com");
-  const noon = await request(db, { companyId: ids["noon.com"], mailAccountId: boxes.gmail, type: "ERASURE_OBJECTION", status: "DRAFT", reference: "SD-NOON" });
-  const noonL = letter("Noon", "SD-NOON", "you@gmail.com");
+  const noon = await request(db, { companyId: ids["noon.com"], mailAccountId: boxes.gmail, type: "ERASURE_OBJECTION", status: "DRAFT", reference: "SD-NN01" });
+  const noonL = letter("Noon", "SD-NN01", "you@gmail.com");
   const noonO = await outbound(db, noon.id, { kind: "INITIAL", templateId: "6a", to: "privacy@noon.com", ...noonL });
   await created(db, noon.id, noonO.id, noonC.id);
 
@@ -185,14 +185,14 @@ async function seedTracker(db: PrismaClient, ids: Ids, boxes: Boxes, now: number
   await reply(ex.r.id, "extra.com", "Re: Request — Ref SD-EXT1", "Please verify your identity by sending a copy of your national ID.", "NEEDS_ID", 2, true);
   // NEEDS_ACTION: mailbox lacks send permission (the dispatcher couldn't send).
   await request(db, {
-    companyId: ids["uber.com"], mailAccountId: boxes.gmail, type: "ERASURE_OBJECTION", status: "NEEDS_ACTION", reference: "SD-UBR1",
+    companyId: ids["uber.com"], mailAccountId: boxes.gmail, type: "ERASURE_OBJECTION", status: "NEEDS_ACTION", reference: "SD-VBR1",
     extra: { needsActionReason: "SEND_PERMISSION" },
   }).then(async (r) => {
-    const l = letter("Uber", "SD-UBR1", "you@gmail.com");
+    const l = letter("Uber", "SD-VBR1", "you@gmail.com");
     await outbound(db, r.id, { kind: "INITIAL", templateId: "6a", to: "privacy@uber.com", approved: true, ...l });
   });
   // OVERDUE: sent 40 days ago, no reply, reminder offered.
-  await sent("ikea.com", "SD-IKE1", "OVERDUE", 40);
+  await sent("ikea.com", "SD-KEA1", "OVERDUE", 40);
   // REFUSED: escalation is offered.
   const zr = await sent("zara.com", "SD-ZAR1", "REFUSED", 20);
   await reply(zr.r.id, "zara.com", "Re: Ref SD-ZAR1", "We are unable to delete your data because we must keep it.", "REFUSED", 3, true);
@@ -205,5 +205,5 @@ async function seedTracker(db: PrismaClient, ids: Ids, boxes: Boxes, now: number
   const nkO = await outbound(db, nk.id, { kind: "INITIAL", templateId: "6a", to: "privacy@nike.com", approved: true, ...nkL });
   await db.outboundMessage.update({ where: { id: nkO.id }, data: { sendAfter: new Date(now + 3600_000) } });
   // ESCALATED with a complaint reference.
-  await sent("adidas.com", "SD-ADI1", "ESCALATED", 60, { complaintRef: "SDAIA-12345" });
+  await sent("adidas.com", "SD-AD11", "ESCALATED", 60, { complaintRef: "SDAIA-12345" });
 }

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import type { ReviewData, ReviewItem } from "@/lib/review/load";
 import { channelOf, planSend, secondsLeft, type ReviewChannel } from "@/lib/review/plan";
@@ -55,7 +55,12 @@ export function ReviewClient({
   const t = useTranslations("review");
   const router = useRouter();
   const n = (v: number) => formatNumber(locale, v);
-  const items = data.items;
+  // Approval ticks show at once (optimistic) and settle when the server answers.
+  const [optimistic, setOptimistic] = useOptimistic<Record<string, boolean>, [string, boolean]>({}, (s, [id, v]) => ({ ...s, [id]: v }));
+  const items = useMemo(
+    () => data.items.map((i) => (i.outboundId in optimistic ? { ...i, approved: optimistic[i.outboundId] } : i)),
+    [data.items, optimistic],
+  );
   const [currentId, setCurrentId] = useState<string | null>(initialId && items.some((i) => i.outboundId === initialId) ? initialId : null);
   const current = items.find((i) => i.outboundId === currentId) ?? items.find((i) => !i.approved && i.status !== "QUEUED") ?? items[0];
   const [edits, setEdits] = useState<Record<string, Edit>>({});
@@ -65,6 +70,11 @@ export function ReviewClient({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [pending, startTransition] = useTransition();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  // Focus starts on Cancel (04-ux §6.5); runs after the Modal child has called showModal().
+  useEffect(() => {
+    if (confirmOpen) cancelRef.current?.focus();
+  }, [confirmOpen]);
 
   const plan = useMemo(
     () => planSend(items.map((i) => ({ ...i, mailbox: i.mailbox.address }))),
@@ -115,6 +125,7 @@ export function ReviewClient({
 
   const approve = (item: ReviewItem, advance: boolean) =>
     run(async () => {
+      setOptimistic([item.outboundId, true]);
       const res = await approveAction(locale, item.outboundId, patchOf(item));
       if (!res.ok) return setError(errorText(res.error));
       clearEdit(item.outboundId);
@@ -128,6 +139,7 @@ export function ReviewClient({
 
   const unapprove = (item: ReviewItem) =>
     run(async () => {
+      setOptimistic([item.outboundId, false]);
       const res = await unapproveAction(locale, item.outboundId);
       if (!res.ok) return setError(errorText(res.error));
       setNotice({ text: t("unapprovedOne", { name: item.companyName }) });
@@ -303,7 +315,7 @@ export function ReviewClient({
             )}
             <p className="mt-3 text-sm text-muted">{t("confirm.note")}</p>
             <div className="mt-6 flex flex-wrap justify-between gap-3">
-              <button type="button" autoFocus onClick={() => setConfirmOpen(false)} className="min-h-tap rounded-md border border-border-strong px-4">
+              <button type="button" ref={cancelRef} autoFocus onClick={() => setConfirmOpen(false)} className="min-h-tap rounded-md border border-border-strong px-4">
                 {t("confirm.cancel")}
               </button>
               <button type="button" onClick={send} disabled={pending} className="min-h-tap rounded-md bg-primary px-4 font-medium text-primary-fg">
@@ -423,7 +435,7 @@ function PersonalDataChips({ text, fullName, emails }: { text: string; fullName:
               key={k}
               data-pii={k}
               data-included={on}
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-sm ${bad ? "border-danger bg-danger-bg text-danger" : on ? "border-success bg-success-bg text-success" : "border-border-strong text-muted"}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-sm ${bad ? "border-danger bg-danger-bg text-danger" : on ? "border-success bg-success-bg text-text" : "border-border-strong text-muted"}`}
             >
               <span aria-hidden="true">{on ? (bad ? "⚠" : "✓") : "✗"}</span>
               {t(k)}
