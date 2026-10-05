@@ -12,6 +12,7 @@ import {
   type GmailMessageMeta,
 } from "@/lib/mail/gmail";
 import { parseHeaders } from "@/lib/mail/headers";
+import { isEverything } from "@/lib/mail/scan-range";
 
 export type GmailCursor = { historyId: string };
 export type ScanProgress = { phase: "listing" | "fetching" | "done"; listed: number; fetched: number; startedAt: string };
@@ -20,6 +21,11 @@ const GET_CONCURRENCY = 5;
 
 function yearsBetween(from: Date, to = new Date()) {
   return Math.max(1, Math.ceil((to.getTime() - from.getTime()) / (365.25 * 24 * 3600 * 1000)));
+}
+
+/** Gmail search for the initial scan: `newer_than:Ny`, or no query at all for "Everything". */
+export function gmailScanQuery(scanFrom: Date, now = new Date()): string | undefined {
+  return isEverything(scanFrom) ? undefined : `newer_than:${yearsBetween(scanFrom, now)}y`;
 }
 
 /** Converts one Gmail metadata response into a MessageHeader row (or sent-to hashes for SENT mail). */
@@ -112,7 +118,7 @@ export async function initialSync(accountId: string) {
   const token = await googleAccessToken(account);
   // Take the history cursor first so nothing that arrives during the scan is missed.
   const profile = await getProfile(token);
-  const q = `newer_than:${yearsBetween(account.scanFrom)}y`;
+  const q = gmailScanQuery(account.scanFrom);
   const progress: ScanProgress = { phase: "listing", listed: 0, fetched: 0, startedAt: new Date().toISOString() };
 
   let pageToken: string | undefined;

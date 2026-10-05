@@ -1,8 +1,9 @@
 "use client";
+import Link from "next/link";
 import { useMemo, useRef, useState, useTransition, type MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 import type { Confidence, DecisionValue } from "@prisma/client";
-import type { CompanyRow } from "@/lib/companies/types";
+import type { CompanyRow, MatchRef } from "@/lib/companies/types";
 import type { SectionKey } from "@/lib/companies/filters";
 import { planBulkDecision } from "@/lib/companies/bulk";
 import { hasRecentAccountMail } from "@/lib/companies/evidence";
@@ -15,26 +16,46 @@ const DOTS: Record<Confidence, string> = { HIGH: "●●●", MEDIUM: "●●○
 
 type Account = { id: string; address: string };
 type Confirm = { ids: string[]; count: number; names: string[] };
+export type Pager = {
+  page: number;
+  pages: number;
+  from: number;
+  to: number;
+  total: number;
+  prev: string | null;
+  next: string | null;
+  first: string | null;
+  last: string | null;
+};
 
 export function CompanyList({
   sections,
-  matching,
+  sectionTotals,
+  matches,
+  pager,
   accounts,
   locale,
 }: {
+  /** Rows of the current page, grouped. */
   sections: { key: SectionKey; rows: CompanyRow[] }[];
-  matching: number;
+  /** Rows per section across all pages. */
+  sectionTotals: Partial<Record<SectionKey, number>>;
+  /** Every row matching the filters (all pages): selection and bulk actions work on these. */
+  matches: MatchRef[];
+  pager: Pager;
   accounts: Account[];
   locale: string;
 }) {
   const t = useTranslations("companies");
   const rows = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
   const byId = useMemo(() => new Map(rows.map((r) => [r.id, r])), [rows]);
+  const refById = useMemo(() => new Map(matches.map((r) => [r.id, r])), [matches]);
   const order = useMemo(() => rows.map((r) => r.id), [rows]);
 
-  // Nothing is pre-selected (04-ux §1.2); ids that leave the list drop out of the selection.
+  // Nothing is pre-selected (04-ux §1.2). The selection survives page changes (the list stays mounted);
+  // ids that stop matching the filters drop out of it.
   const [picked, setPicked] = useState<Set<string>>(() => new Set());
-  const selected = useMemo(() => new Set([...picked].filter((id) => byId.has(id))), [picked, byId]);
+  const selected = useMemo(() => new Set([...picked].filter((id) => refById.has(id))), [picked, refById]);
   const [overrides, setOverrides] = useState<Record<string, DecisionValue>>({});
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -48,11 +69,12 @@ export function CompanyList({
   const n = (v: number) => formatNumber(locale, v);
   const decisionOf = (r: CompanyRow) => overrides[r.id] ?? r.decision;
   const drawer = drawerId ? byId.get(drawerId) : undefined;
-  const selectedRows = [...selected].map((id) => byId.get(id)!).filter(Boolean);
+  const selectedRows = [...selected].map((id) => refById.get(id)!).filter(Boolean);
+  const offPage = [...selected].filter((id) => !byId.has(id)).length;
 
   const toggle = (id: string, e?: MouseEvent<HTMLInputElement>) => {
     setPicked((prev) => {
-      const next = new Set([...prev].filter((x) => byId.has(x)));
+      const next = new Set([...prev].filter((x) => refById.has(x)));
       const on = !next.has(id);
       // Shift-click selects the range from the last toggled row (desktop).
       if (e?.shiftKey && anchor.current && byId.has(anchor.current)) {
@@ -110,10 +132,11 @@ export function CompanyList({
     runBulk([...selected], value, false);
   };
 
-  const allSelected = rows.length > 0 && selected.size === rows.length;
+  const allSelected = matches.length > 0 && selected.size === matches.length;
+  const pageSelected = order.length > 0 && order.every((id) => selected.has(id));
 
   return (
-    <div className="mt-6">
+    <div className={`mt-6 ${selected.size ? "pb-32 sm:pb-20" : ""}`}>
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         {selected.size ? t("bulk.selected", { count: n(selected.size) }) : ""}
       </p>
@@ -138,10 +161,19 @@ export function CompanyList({
             ref={(el) => {
               if (el) el.indeterminate = selected.size > 0 && !allSelected;
             }}
-            onChange={() => setPicked(allSelected ? new Set() : new Set(order))}
+            onChange={() => setPicked(allSelected ? new Set() : new Set(matches.map((m) => m.id)))}
           />
-          {t("selectAll", { count: n(matching) })}
+          {t("selectAll", { count: n(matches.length) })}
         </label>
+        {pager.pages > 1 && !pageSelected && (
+          <button
+            type="button"
+            onClick={() => setPicked((prev) => new Set([...prev, ...order]))}
+            className="min-h-tap px-2 text-sm text-primary underline underline-offset-4"
+          >
+            {t("selectPage", { count: n(order.length) })}
+          </button>
+        )}
         {selected.size > 0 && (
           <button type="button" onClick={() => setPicked(new Set())} className="min-h-tap px-2 text-sm text-primary underline underline-offset-4">
             {t("selectNone")}
@@ -171,7 +203,7 @@ export function CompanyList({
                 className="inline-flex min-h-tap items-center gap-2"
               >
                 <span aria-hidden="true" className={`inline-block transition-transform ${open ? "rotate-90" : "rtl:-scale-x-100"}`}>▸</span>
-                {t(`sections.${s.key}`)} <span className="text-base font-normal text-muted">({n(s.rows.length)})</span>
+                {t(`sections.${s.key}`)} <span className="text-base font-normal text-muted">({n(sectionTotals[s.key] ?? s.rows.length)})</span>
               </button>
             </h2>
             <ul id={`list-${s.key}`} hidden={!open} className="mt-3 flex flex-col gap-2">
@@ -192,10 +224,15 @@ export function CompanyList({
         );
       })}
 
+      {pager.pages > 1 && <PageNav pager={pager} locale={locale} />}
+
       {selected.size > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-drawer">
           <div className="mx-auto flex max-w-content flex-wrap items-center gap-2 px-4 py-3" role="toolbar" aria-label={t("bulk.label")}>
-            <span className="me-2 font-semibold" aria-hidden="true">{t("bulk.selected", { count: n(selected.size) })}</span>
+            <span className="me-2 font-semibold" aria-hidden="true">
+              {t("bulk.selected", { count: n(selected.size) })}
+              {offPage > 0 && <span className="ms-1 font-normal text-muted">{t("bulk.offPage", { count: n(offPage) })}</span>}
+            </span>
             {(["REMOVE", "UNSUBSCRIBE", "KEEP"] as const).map((v) => (
               <button
                 key={v}
@@ -258,7 +295,7 @@ export function CompanyList({
               startTransition(async () => {
                 const res = await mergeAction(locale, target, selectedRows.map((r) => r.id).filter((id) => id !== target));
                 if (!res.ok) return setError(t("errors.merge"));
-                setNotice(t("merge.done", { count: n(selectedRows.length), name: byId.get(target)?.name ?? "" }));
+                setNotice(t("merge.done", { count: n(selectedRows.length), name: refById.get(target)?.name ?? "" }));
                 setPicked(new Set());
               });
             }}
@@ -287,6 +324,33 @@ export function CompanyList({
         )}
       </Modal>
     </div>
+  );
+}
+
+function PageNav({ pager, locale }: { pager: Pager; locale: string }) {
+  const t = useTranslations("companies.pages");
+  const n = (v: number) => formatNumber(locale, v);
+  const link = "inline-flex min-h-tap items-center rounded-md border border-border-strong px-3 text-sm font-medium";
+  return (
+    <nav aria-label={t("label")} className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+      <p className="text-sm text-muted">
+        {t("status", { page: n(pager.page), pages: n(pager.pages), from: n(pager.from), to: n(pager.to), total: n(pager.total) })}
+      </p>
+      <ul className="flex flex-wrap gap-2">
+        {pager.first && (
+          <li><Link href={pager.first} className={link}>{t("first")}</Link></li>
+        )}
+        {pager.prev && (
+          <li><Link href={pager.prev} rel="prev" className={link}><span aria-hidden="true" className="rtl:-scale-x-100 me-1 inline-block">‹</span>{t("prev")}</Link></li>
+        )}
+        {pager.next && (
+          <li><Link href={pager.next} rel="next" className={link}>{t("next")}<span aria-hidden="true" className="rtl:-scale-x-100 ms-1 inline-block">›</span></Link></li>
+        )}
+        {pager.last && (
+          <li><Link href={pager.last} className={link}>{t("last", { page: n(pager.pages) })}</Link></li>
+        )}
+      </ul>
+    </nav>
   );
 }
 
@@ -443,7 +507,7 @@ function MergeForm({
   onCancel,
   onMerge,
 }: {
-  rows: CompanyRow[];
+  rows: MatchRef[];
   locale: string;
   onCancel: () => void;
   onMerge: (targetId: string) => void;

@@ -31,3 +31,17 @@ export type CompanyRow = {
   senderDomains: string[];
   senderNames: string[];
 };
+
+/**
+ * The small per-company record sent for every matching row (not only the current page), so selection,
+ * "Select all N matching", the low-confidence skip and the >25 confirmation see the whole match set.
+ */
+export type MatchRef = Pick<CompanyRow, "id" | "name" | "primaryDomain" | "confidence" | "emailCount">;
+
+export const toMatchRef = (r: CompanyRow): MatchRef => ({
+  id: r.id,
+  name: r.name,
+  primaryDomain: r.primaryDomain,
+  confidence: r.confidence,
+  emailCount: r.emailCount,
+});

@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/db";
 import { encryptJson } from "@/lib/crypto/tokens";
-import { initialSync, incrementalSync } from "@/lib/mail/gmail-sync";
+import { gmailScanQuery, initialSync, incrementalSync } from "@/lib/mail/gmail-sync";
+import { enqueueInitialSync } from "@/lib/jobs/queue";
+import { isEverything, rangeOf, SCAN_EVERYTHING_FROM, scanFromFor } from "@/lib/mail/scan-range";
+import { restartScan } from "@/lib/mail/restart-scan";
 import { hashAddress } from "@/lib/mail/headers";
 import { json, mockFetch, resetDb } from "./helpers";
 import { marketingMsg, newMsg, sentMsg, trashMsg } from "./fixtures/gmail";
@@ -95,6 +98,69 @@ describe("Gmail incremental sync", () => {
     expect(r.mode).toBe("full");
     const acc = await db.mailAccount.findUniqueOrThrow({ where: { id: account.id } });
     expect(acc.syncCursor).toEqual({ historyId: "100" });
+  });
+});
+
+describe("scan range (04-ux §3.2)", () => {
+  const NOW = new Date("2026-10-05T10:00:00Z");
+
+  it("maps 1 year / 3 years / Everything to scanFrom and back", () => {
+    for (const r of ["1y", "3y", "all"] as const) expect(rangeOf(scanFromFor(r, NOW), NOW)).toBe(r);
+    expect(scanFromFor("all", NOW)).toEqual(SCAN_EVERYTHING_FROM);
+    expect(isEverything(scanFromFor("3y", NOW))).toBe(false);
+  });
+
+  it("Gmail omits newer_than for Everything instead of sending a huge value", () => {
+    expect(gmailScanQuery(scanFromFor("1y", NOW), NOW)).toBe("newer_than:1y");
+    expect(gmailScanQuery(scanFromFor("3y", NOW), NOW)).toBe("newer_than:3y");
+    expect(gmailScanQuery(SCAN_EVERYTHING_FROM, NOW)).toBeUndefined();
+  });
+
+  it("an Everything initial sync lists messages with no q parameter", async () => {
+    const account = await makeAccount();
+    await db.mailAccount.update({ where: { id: account.id }, data: { scanFrom: SCAN_EVERYTHING_FROM } });
+    const m = mockFetch([
+      [/\/profile$/, () => json({ emailAddress: "owner@gmail.com", historyId: "100" })],
+      [/\/messages\?/, () => json({ messages: [{ id: "m1" }] })],
+      [/\/messages\/\w+\?/, (u) => json(byId[u.pathname.split("/").pop()!])],
+    ]);
+    vi.stubGlobal("fetch", m.fn);
+    await initialSync(account.id);
+    const list = m.calls.find((u) => /\/messages$/.test(u.pathname))!;
+    expect(list.searchParams.has("q")).toBe(false);
+  });
+
+  it("restartScan sets scanFrom, clears cursor and progress, keeps headers and queues an initial sync", async () => {
+    const account = await makeAccount();
+    vi.stubGlobal("fetch", gmailRoutes().fn);
+    await initialSync(account.id);
+    const before = await db.messageHeader.count();
+    expect(before).toBe(1);
+    vi.mocked(enqueueInitialSync).mockClear();
+
+    await restartScan(account.id, "all", NOW);
+    const acc = await db.mailAccount.findUniqueOrThrow({ where: { id: account.id } });
+    expect(acc.scanFrom).toEqual(SCAN_EVERYTHING_FROM);
+    expect(acc.syncCursor).toBeNull();
+    expect(acc.scanProgress).toBeNull();
+    expect(enqueueInitialSync).toHaveBeenCalledWith(account.id);
+    expect(await db.messageHeader.count()).toBe(before);
+
+    // The re-scan meets the same message again: deduped by providerMsgId, not stored twice.
+    vi.stubGlobal("fetch", mockFetch([
+      [/\/profile$/, () => json({ emailAddress: "owner@gmail.com", historyId: "200" })],
+      [/\/messages\?/, () => json({ messages: [{ id: "m1" }, { id: "n1" }] })],
+      [/\/messages\/\w+\?/, (u) => json(byId[u.pathname.split("/").pop()!])],
+    ]).fn);
+    await initialSync(account.id);
+    expect(await db.messageHeader.count()).toBe(2);
+    expect(await db.messageHeader.count({ where: { providerMsgId: "m1" } })).toBe(1);
+  });
+
+  it("restartScan refuses a mailbox that needs reconnecting", async () => {
+    const account = await makeAccount();
+    await db.mailAccount.update({ where: { id: account.id }, data: { status: "NEEDS_RECONNECT" } });
+    await expect(restartScan(account.id, "1y", NOW)).rejects.toThrow("not_active");
   });
 });
 

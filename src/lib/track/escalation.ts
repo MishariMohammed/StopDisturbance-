@@ -100,6 +100,7 @@ export async function escalationPacket(requestId: string, lang: "en" | "ar", reg
     law_citations: ctx.jurisdiction.citationsText(lang),
     email_addresses: ctx.emailAddresses.join(lang === "en" ? ", " : "، "),
     first_seen_date: fmt(firstSeen),
+    reference_id: request.reference,
     original_send_date: fmt(request.clockStart),
     deadline_date: fmt(request.dueAt ?? request.clockStart),
     reminder_date: request.reminderSentAt ? fmt(request.reminderSentAt) : lang === "en" ? "— (no reminder was sent)" : "— (لم يُرسل)",

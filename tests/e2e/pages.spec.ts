@@ -1,12 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { expect, test } from "@playwright/test";
-import { reseed } from "./helpers";
+import { gotoReady, reseed } from "./helpers";
 import { E2E } from "./seed";
 
 test.beforeEach(reseed);
 
 test("/scan shows per-account progress and refreshes itself", async ({ page }) => {
-  await page.goto("/en/scan");
+  await gotoReady(page, "/en/scan");
   const bars = page.getByRole("progressbar");
   await expect(bars).toHaveCount(2);
   await expect(bars.nth(0)).toHaveAttribute("aria-valuenow", "100");
@@ -28,7 +28,7 @@ test("/scan shows per-account progress and refreshes itself", async ({ page }) =
 });
 
 test("/connect first-run setup saves owner details with AI default Rules only", async ({ page }) => {
-  await page.goto("/en/connect");
+  await gotoReady(page, "/en/connect");
   await expect(page.getByRole("radio", { name: /^Rules only/ })).toBeChecked();
   await expect(page.getByRole("radio", { name: /^DeepSeek/ })).toBeDisabled();
   await page.getByLabel("Your name as companies know you").fill("Mishari Test");

@@ -9,6 +9,21 @@ export async function reseed() {
   await seed();
 }
 
+/**
+ * Waits until React has hydrated the current document (<html data-hydrated>, set by HydrationMarker).
+ * Server-rendered HTML can pass assertions before the client router and event handlers are attached;
+ * a back/forward or click in that window is lost.
+ */
+export async function waitForHydration(page: Page) {
+  await expect(page.locator("html[data-hydrated]")).toHaveCount(1);
+}
+
+/** page.goto + waitForHydration. */
+export async function gotoReady(page: Page, url: string) {
+  await page.goto(url);
+  await waitForHydration(page);
+}
+
 /** Fails on any serious or critical axe violation (WCAG 2.2 A/AA rule set). */
 export async function expectNoSeriousAxe(page: Page) {
   const results = await new AxeBuilder({ page })

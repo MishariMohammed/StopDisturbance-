@@ -146,3 +146,54 @@ export function groupRows(rows: CompanyRow[]): { key: SectionKey; rows: CompanyR
   }
   return (["data", "marketing", "kept"] as const).map((key) => ({ key, rows: sections[key] })).filter((s) => s.rows.length);
 }
+
+// Pagination (04-ux §3.3/§5.3). Pages split the list for rendering only: selection, "Select all N matching",
+// bulk actions and the >25 confirmation always work on every matching row, across pages.
+
+export const PAGE_SIZES = [25, 50, 100] as const;
+export const DEFAULT_PAGE_SIZE = 50;
+
+export type Paging = { page: number; per: number };
+
+export function parsePaging(sp: Params): Paging {
+  const per = Number(get(sp, "per"));
+  const page = Number(get(sp, "page"));
+  return {
+    per: (PAGE_SIZES as readonly number[]).includes(per) ? per : DEFAULT_PAGE_SIZE,
+    page: Number.isInteger(page) && page >= 1 ? Math.min(page, 10_000) : 1,
+  };
+}
+
+/** Query string for filters plus paging, omitting defaults (page 1, 50 per page). */
+export function companiesQuery(f: Partial<Filters>, p: Partial<Paging> = {}): string {
+  const out = new URLSearchParams(filtersToQuery(f));
+  if (p.per && p.per !== DEFAULT_PAGE_SIZE) out.set("per", String(p.per));
+  if (p.page && p.page > 1) out.set("page", String(p.page));
+  return out.toString();
+}
+
+export type PageSlice<T> = {
+  rows: T[];
+  /** Current page, clamped to 1..pages. */
+  page: number;
+  pages: number;
+  per: number;
+  total: number;
+  /** 1-based index of the first and last row shown (0 when empty). */
+  from: number;
+  to: number;
+};
+
+export function paginate<T>(rows: T[], p: Paging): PageSlice<T> {
+  const total = rows.length;
+  const pages = Math.max(1, Math.ceil(total / p.per));
+  const page = Math.min(Math.max(1, p.page), pages);
+  const start = (page - 1) * p.per;
+  const slice = rows.slice(start, start + p.per);
+  return { rows: slice, page, pages, per: p.per, total, from: slice.length ? start + 1 : 0, to: start + slice.length };
+}
+
+/** Rows in display order (sections data → marketing → kept), so pages continue a section rather than restart it. */
+export function displayOrder(rows: CompanyRow[]): CompanyRow[] {
+  return groupRows(rows).flatMap((s) => s.rows);
+}

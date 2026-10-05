@@ -2,7 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { requireOwner } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { loadCompanies } from "@/lib/companies/load";
-import { applyFilters, categoryCounts, groupRows, parseFilters } from "@/lib/companies/filters";
+import { applyFilters, categoryCounts, companiesQuery, displayOrder, groupRows, paginate, parseFilters, parsePaging } from "@/lib/companies/filters";
+import { toMatchRef } from "@/lib/companies/types";
 import { overallPercent, toAccountScan } from "@/lib/companies/scan-status";
 import { formatNumber } from "@/lib/format";
 import { draftableCompanyIds } from "@/lib/review/load";
@@ -22,7 +23,9 @@ export default async function CompaniesPage({
   const { locale } = await params;
   await requireOwner(locale);
   const t = await getTranslations("companies");
-  const filters = parseFilters(await searchParams);
+  const sp = await searchParams;
+  const filters = parseFilters(sp);
+  const paging = parsePaging(sp);
   const [all, accountRows, draftable] = await Promise.all([
     loadCompanies(),
     db.mailAccount.findMany({
@@ -32,9 +35,15 @@ export default async function CompaniesPage({
     }),
     draftableCompanyIds(),
   ]);
-  const rows = applyFilters(all, filters, { locale });
+  const rows = displayOrder(applyFilters(all, filters, { locale }));
+  const slice = paginate(rows, paging);
+  const sectionTotals = Object.fromEntries(groupRows(rows).map((s) => [s.key, s.rows.length]));
+  const pageHref = (page: number) => {
+    const qs = companiesQuery(filters, { per: slice.per, page });
+    return qs ? `/${locale}/companies?${qs}` : `/${locale}/companies`;
+  };
   const counts = categoryCounts(all, filters);
-  const scans = accountRows.map(toAccountScan);
+  const scans = accountRows.map((a) => toAccountScan(a));
   const running = scans.some((s) => s.phase !== "done" && s.status === "ACTIVE");
   const percent = overallPercent(scans);
   const accounts = accountRows.map((a) => ({ id: a.id, address: a.address }));
@@ -62,14 +71,26 @@ export default async function CompaniesPage({
           </form>
         </section>
       )}
-      <FilterBar filters={filters} counts={counts} accounts={accounts} locale={locale} />
+      <FilterBar filters={filters} per={slice.per} counts={counts} accounts={accounts} locale={locale} />
       {all.length === 0 ? (
         <p className="mt-8 rounded-lg border border-border bg-surface p-6">{t("emptyScan")}</p>
       ) : (
         <CompanyList
-          key={JSON.stringify(filters)}
-          sections={groupRows(rows)}
-          matching={rows.length}
+          key={`${JSON.stringify(filters)}:${slice.per}`}
+          sections={groupRows(slice.rows)}
+          sectionTotals={sectionTotals}
+          matches={rows.map(toMatchRef)}
+          pager={{
+            page: slice.page,
+            pages: slice.pages,
+            from: slice.from,
+            to: slice.to,
+            total: slice.total,
+            prev: slice.page > 1 ? pageHref(slice.page - 1) : null,
+            next: slice.page < slice.pages ? pageHref(slice.page + 1) : null,
+            first: slice.page > 2 ? pageHref(1) : null,
+            last: slice.page < slice.pages - 1 ? pageHref(slice.pages) : null,
+          }}
           accounts={accounts}
           locale={locale}
         />

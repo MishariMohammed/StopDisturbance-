@@ -10,6 +10,7 @@ export const QUEUES = {
   repliesPoll: "replies.poll",
   deadlineTick: "deadline.tick",
   digest: "notify.digest",
+  retention: "retention.daily",
 } as const;
 
 export type SyncJob = { accountId: string };

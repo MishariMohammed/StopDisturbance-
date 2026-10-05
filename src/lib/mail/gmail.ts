@@ -85,7 +85,7 @@ export function getProfile(token: string) {
   return gmailFetch<{ emailAddress: string; historyId: string }>(token, "/profile", { method: "getProfile" });
 }
 
-export function listMessages(token: string, q: string, pageToken?: string) {
+export function listMessages(token: string, q: string | undefined, pageToken?: string) {
   return gmailFetch<{ messages?: { id: string; threadId: string }[]; nextPageToken?: string }>(token, "/messages", {
     method: "messages.list",
     query: { q, includeSpamTrash: "true", maxResults: "500", pageToken },

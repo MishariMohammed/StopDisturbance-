@@ -1,6 +1,7 @@
 import type { AccountStatus, Provider } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { ScanProgress } from "@/lib/mail/gmail-sync";
+import { rangeOf, type ScanRange } from "@/lib/mail/scan-range";
 import { loadCompanies } from "./load";
 
 export type AccountScan = {
@@ -13,6 +14,8 @@ export type AccountScan = {
   fetched: number;
   /** 0–100, or null when the total isn't known yet. */
   percent: number | null;
+  /** ScanRangeSelector value (04-ux §3.2); null when scanFrom wasn't loaded. */
+  range: ScanRange | null;
 };
 
 export type ScanStatus = {
@@ -33,13 +36,15 @@ export function toAccountScan(a: {
   provider: Provider;
   status: AccountStatus;
   scanProgress: unknown;
-}): AccountScan {
+  scanFrom?: Date;
+}, now = new Date()): AccountScan {
   const p = (a.scanProgress ?? null) as Partial<ScanProgress> | null;
   const phase = p?.phase ?? "pending";
   const listed = Math.max(0, Number(p?.listed ?? 0));
   const fetched = Math.max(0, Number(p?.fetched ?? 0));
   const percent = phase === "done" ? 100 : listed > 0 ? Math.min(100, Math.floor((fetched / listed) * 100)) : null;
-  return { id: a.id, address: a.address, provider: a.provider, status: a.status, phase, listed, fetched, percent };
+  const range = a.scanFrom ? rangeOf(a.scanFrom, now) : null;
+  return { id: a.id, address: a.address, provider: a.provider, status: a.status, phase, listed, fetched, percent, range };
 }
 
 export function overallPercent(accounts: AccountScan[]): number | null {
@@ -55,11 +60,11 @@ export async function loadScanStatus(): Promise<ScanStatus> {
     db.mailAccount.findMany({
       where: { status: { not: "DISCONNECTED" } },
       orderBy: { createdAt: "asc" },
-      select: { id: true, address: true, provider: true, status: true, scanProgress: true },
+      select: { id: true, address: true, provider: true, status: true, scanProgress: true, scanFrom: true },
     }),
     loadCompanies(),
   ]);
-  const accounts = rows.map(toAccountScan);
+  const accounts = rows.map((r) => toAccountScan(r));
   const running = accounts.some((a) => a.phase !== "done" && a.status === "ACTIVE");
   return {
     accounts,

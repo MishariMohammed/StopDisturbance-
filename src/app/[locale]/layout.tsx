@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { HydrationMarker } from "@/components/hydration-marker";
 
 export const metadata = { title: "StopDisturbance", robots: { index: false, follow: false } };
 
@@ -18,6 +19,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       <body className="min-h-screen font-sans antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <HydrationMarker />
       </body>
     </html>
   );

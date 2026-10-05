@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ScanStatus } from "@/lib/companies/scan-status";
 import { formatNumber } from "@/lib/format";
+import { SCAN_RANGES } from "@/lib/mail/scan-range";
+import { changeScanRangeAction } from "./actions";
 
 const POLL_MS = 5000;
 
@@ -11,6 +13,12 @@ const POLL_MS = 5000;
 export function ScanLive({ initial, locale }: { initial: ScanStatus; locale: string }) {
   const t = useTranslations("scan");
   const [status, setStatus] = useState(initial);
+  // A range change re-renders the page with fresh server data: start from it again.
+  const [shown, setShown] = useState(initial);
+  if (shown !== initial) {
+    setShown(initial);
+    setStatus(initial);
+  }
   const [stale, setStale] = useState(false);
   const n = (v: number) => formatNumber(locale, v);
 
@@ -80,6 +88,7 @@ export function ScanLive({ initial, locale }: { initial: ScanStatus; locale: str
                   style={{ width: `${a.percent ?? 30}%` }}
                 />
               </div>
+              {a.status === "ACTIVE" && a.range && <ScanRangeSelector key={a.range} accountId={a.id} address={a.address} range={a.range} locale={locale} />}
             </li>
           );
         })}
@@ -106,5 +115,33 @@ export function ScanLive({ initial, locale }: { initial: ScanStatus; locale: str
         </Link>
       </section>
     </>
+  );
+}
+
+/** 04-ux §3.2: 1 year / 3 years (default) / Everything. Submitting restarts this mailbox's scan. */
+function ScanRangeSelector({ accountId, address, range, locale }: { accountId: string; address: string; range: string; locale: string }) {
+  const t = useTranslations("scan.range");
+  return (
+    <form action={changeScanRangeAction} className="mt-3">
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="accountId" value={accountId} />
+      <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        <legend className="mb-1 font-medium">
+          {t("legend")}
+          <span className="sr-only"> — {address}</span>
+        </legend>
+        {SCAN_RANGES.map((r) => (
+          <label key={r} className="inline-flex min-h-tap items-center gap-2">
+            <input type="radio" name="range" value={r} defaultChecked={r === range} className="size-5" />
+            {t(`opt.${r}`)}
+          </label>
+        ))}
+        <button type="submit" className="min-h-tap rounded-md border border-border-strong px-3 font-medium">
+          {t("change")}
+          <span className="sr-only"> — {address}</span>
+        </button>
+      </fieldset>
+      <p className="mt-1 text-xs text-muted">{t("help")}</p>
+    </form>
   );
 }

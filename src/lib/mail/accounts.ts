@@ -11,6 +11,11 @@ export class ReconnectRequiredError extends Error {
   }
 }
 
+/** A disconnected mailbox has had its tokens revoked and wiped (src/lib/privacy/erase.ts). */
+function assertConnected(account: MailAccount) {
+  if (account.status === "DISCONNECTED" || !account.tokenCipher?.length) throw new ReconnectRequiredError(account.id);
+}
+
 export function readTokens(account: MailAccount): GoogleTokens {
   return decryptJson<GoogleTokens>(account.tokenCipher, account.tokenKeyVersion);
 }
@@ -25,6 +30,7 @@ export async function saveTokens(accountId: string, tokens: GoogleTokens | Micro
 
 /** Returns a valid Google access token, refreshing (and persisting) when within 60 s of expiry. */
 export async function googleAccessToken(account: MailAccount): Promise<string> {
+  assertConnected(account);
   const tokens = readTokens(account);
   if (tokens.expires_at - Date.now() > 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new ReconnectRequiredError(account.id);
@@ -54,6 +60,7 @@ async function markNeedsReconnect(account: MailAccount, provider: "GOOGLE" | "MI
  * Microsoft rotates refresh tokens (90-day sliding window), so the new one is persisted on every refresh.
  */
 export async function microsoftAccessToken(account: MailAccount): Promise<string> {
+  assertConnected(account);
   const tokens = decryptJson<MicrosoftTokens>(account.tokenCipher, account.tokenKeyVersion);
   if (tokens.expires_at - Date.now() > 60_000) return tokens.access_token;
   if (!tokens.refresh_token) throw new ReconnectRequiredError(account.id);

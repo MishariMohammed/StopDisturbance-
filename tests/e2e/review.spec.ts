@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoSeriousAxe, reseed } from "./helpers";
+import { expectNoSeriousAxe, gotoReady, reseed } from "./helpers";
 
 test.beforeEach(reseed);
 
@@ -19,7 +19,7 @@ async function withDb<T>(fn: (db: PrismaClient) => Promise<T>): Promise<T> {
 const statusOf = (ref: string) => withDb((db) => db.request.findUniqueOrThrow({ where: { reference: ref } }).then((r) => r.status));
 
 test("list view approves per row only; there is no approve-all", async ({ page }) => {
-  await page.goto("/en/review?view=list");
+  await gotoReady(page, "/en/review?view=list");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Review and approve");
   await expect(page.getByText("4 drafts · 0 approved · 4 to review")).toBeVisible();
   await expect(page.getByRole("button", { name: /approve all/i })).toHaveCount(0);
@@ -45,7 +45,7 @@ test("list view approves per row only; there is no approve-all", async ({ page }
 });
 
 test("editing after approval clears the approval; guardrails and diff", async ({ page }) => {
-  await page.goto("/en/review");
+  await gotoReady(page, "/en/review");
   await queue(page).getByRole("button", { name: /Noon/ }).click();
   await expect(editor(page).getByRole("heading", { level: 2 })).toContainText("Noon — Remove my data");
   await expect(editor(page)).toContainText("Email from you@gmail.com");
@@ -86,7 +86,7 @@ test("editing after approval clears the approval; guardrails and diff", async ({
 });
 
 test("send confirmation names the count, mailbox and every recipient; undo cancels", async ({ page }) => {
-  await page.goto("/en/review?view=list");
+  await gotoReady(page, "/en/review?view=list");
   for (const name of ["Noon", "مكتبة جرير", "Careem"]) {
     await page.getByRole("checkbox", { name: `Approve ${name}` }).check();
     await expect(page.getByRole("checkbox", { name: `Approve ${name}` })).toBeChecked();
@@ -112,7 +112,7 @@ test("send confirmation names the count, mailbox and every recipient; undo cance
 });
 
 test("web form: copy block and “I submitted it” starts the clock", async ({ page }) => {
-  await page.goto("/en/review");
+  await gotoReady(page, "/en/review");
   await queue(page).getByRole("button", { name: /Shein/ }).click();
   const guide = editor(page).getByRole("region", { name: "Submit their web form yourself" });
   await expect(guide.getByRole("link", { name: /Open form/ })).toHaveAttribute("href", "https://shein.example/privacy-request");
@@ -128,7 +128,7 @@ test("web form: copy block and “I submitted it” starts the clock", async ({ 
 });
 
 test("companies: “Create N drafts” for decided companies opens /review", async ({ page }) => {
-  await page.goto("/en/companies");
+  await gotoReady(page, "/en/companies");
   await expect(page.getByRole("button", { name: /^Create \d+ drafts$/ })).toHaveCount(0);
   await page.locator('li[data-company="udemy.com"]').getByText("Remove my data", { exact: true }).click();
   await expect(page.getByRole("button", { name: "Create 1 drafts" })).toBeVisible();
@@ -140,11 +140,11 @@ test("companies: “Create N drafts” for decided companies opens /review", asy
 
 for (const locale of ["ar", "en"] as const) {
   test(`axe: /${locale}/review (one by one, list, confirm dialog)`, async ({ page }) => {
-    await page.goto(`/${locale}/review`);
+    await gotoReady(page, `/${locale}/review`);
     await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
     await expect(editor(page)).toBeVisible();
     await expectNoSeriousAxe(page);
-    await page.goto(`/${locale}/review?view=list`);
+    await gotoReady(page, `/${locale}/review?view=list`);
     await expect(page.locator("table")).toBeVisible();
     await page.locator("table input[type=checkbox]").first().check();
     await expect(page.locator("table input[type=checkbox]").first()).toBeChecked();

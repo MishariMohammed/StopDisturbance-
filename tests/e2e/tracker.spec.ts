@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoSeriousAxe, reseed } from "./helpers";
+import { expectNoSeriousAxe, gotoReady, reseed } from "./helpers";
 
 test.beforeEach(reseed);
 
@@ -17,7 +17,7 @@ async function withDb<T>(fn: (db: PrismaClient) => Promise<T>): Promise<T> {
 const req = (ref: string) => withDb((db) => db.request.findUniqueOrThrow({ where: { reference: ref } }));
 
 test("each row shows a canonical status (icon + text) and exactly one next action", async ({ page }) => {
-  await page.goto("/en/tracker");
+  await gotoReady(page, "/en/tracker");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tracker");
   // Drafts live on /review.
   await expect(row(page, "SD-NN01")).toHaveCount(0);
@@ -52,13 +52,13 @@ test("each row shows a canonical status (icon + text) and exactly one next actio
 });
 
 test("cancel while queued", async ({ page }) => {
-  await page.goto("/en/tracker");
+  await gotoReady(page, "/en/tracker");
   await row(page, "SD-NKE1").getByRole("button", { name: /Cancel sending/ }).click();
   await expect.poll(async () => (await req("SD-NKE1")).status).toBe("APPROVED");
 });
 
 test("reply confirmation updates the status", async ({ page }) => {
-  await page.goto("/en/tracker");
+  await gotoReady(page, "/en/tracker");
   await row(page, "SD-NMS1").getByRole("link", { name: /Check their reply/ }).click();
   const reply = page.locator("li[data-reply]");
   await expect(reply).toContainText("We have deleted your personal data as requested.");
@@ -68,7 +68,7 @@ test("reply confirmation updates the status", async ({ page }) => {
 });
 
 test("ID request: “Reply with details” drafts template 6e for review", async ({ page }) => {
-  await page.goto("/en/tracker");
+  await gotoReady(page, "/en/tracker");
   await row(page, "SD-EXT1").getByRole("button", { name: /Reply with details/ }).click();
   await expect(page).toHaveURL(/\/en\/review\?item=/);
   const editor = page.locator("article[data-outbound]");
@@ -78,14 +78,14 @@ test("ID request: “Reply with details” drafts template 6e for review", async
 });
 
 test("overdue: “Send reminder” drafts the reminder for review", async ({ page }) => {
-  await page.goto("/en/tracker");
+  await gotoReady(page, "/en/tracker");
   await row(page, "SD-KEA1").getByRole("button", { name: /Send reminder/ }).click();
   await expect(page).toHaveURL(/\/en\/review\?item=/);
   await expect(page.locator("article[data-outbound]").getByRole("heading", { level: 2 })).toContainText("IKEA — Reminder");
 });
 
 test("escalation wizard shows the regulator and complaint text and never files anything", async ({ page }) => {
-  await page.goto("/en/tracker");
+  await gotoReady(page, "/en/tracker");
   await row(page, "SD-ZAR1").getByRole("link", { name: /File a complaint with SDAIA/ }).click();
   const dialog = page.getByRole("dialog", { name: "File a complaint yourself" });
   await expect(dialog).toBeVisible();
@@ -115,18 +115,18 @@ test("evidence ZIP downloads for the owner", async ({ page }) => {
 
 for (const locale of ["ar", "en"] as const) {
   test(`axe: /${locale}/tracker and /${locale}/tracker/[id]`, async ({ page }) => {
-    await page.goto(`/${locale}/tracker`);
+    await gotoReady(page, `/${locale}/tracker`);
     await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
     await expect(row(page, "SD-AMZ1")).toBeVisible();
     await expectNoSeriousAxe(page);
 
     const nms = await req("SD-NMS1");
-    await page.goto(`/${locale}/tracker/${nms.id}`);
+    await gotoReady(page, `/${locale}/tracker/${nms.id}`);
     await expect(page.locator("li[data-reply]")).toBeVisible();
     await expectNoSeriousAxe(page);
 
     const zr = await req("SD-ZAR1");
-    await page.goto(`/${locale}/tracker/${zr.id}?escalate=1`);
+    await gotoReady(page, `/${locale}/tracker/${zr.id}?escalate=1`);
     await expect(page.getByTestId("complaint-text")).toBeVisible();
     await expectNoSeriousAxe(page);
   });

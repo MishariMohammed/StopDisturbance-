@@ -6,10 +6,16 @@ import {
   applyFilters,
   categoryCounts,
   DEFAULT_FILTERS,
+  companiesQuery,
+  DEFAULT_PAGE_SIZE,
+  displayOrder,
   filtersToQuery,
   groupRows,
+  paginate,
   parseFilters,
+  parsePaging,
 } from "@/lib/companies/filters";
+import { toMatchRef } from "@/lib/companies/types";
 import { BULK_REMOVE_CONFIRM_OVER, planBulkDecision } from "@/lib/companies/bulk";
 import { buildCompanyRow, hasEvidence, hasRecentAccountMail } from "@/lib/companies/evidence";
 import { loadCompanies } from "@/lib/companies/load";
@@ -108,6 +114,55 @@ describe("filters", () => {
       ["marketing", ["ads"]],
       ["kept", ["data"]],
     ]);
+  });
+});
+
+describe("pagination", () => {
+  const many = Array.from({ length: 120 }, (_, i) =>
+    row({ id: `c${i}`, name: `C${i}`, emailCount: 1000 - i, holdsData: i % 2 === 0, sendsAds: true, confidence: i % 4 === 3 ? "LOW" : "HIGH" }),
+  );
+
+  it("parses page and per from the URL, falling back to page 1 of 50", () => {
+    expect(parsePaging({})).toEqual({ page: 1, per: DEFAULT_PAGE_SIZE });
+    expect(parsePaging(new URLSearchParams("page=3&per=25"))).toEqual({ page: 3, per: 25 });
+    expect(parsePaging({ page: "-2", per: "7" })).toEqual({ page: 1, per: 50 });
+    expect(parsePaging({ page: "1.5", per: ["100", "25"] })).toEqual({ page: 1, per: 100 });
+  });
+
+  it("builds the query with filters and paging, omitting defaults", () => {
+    const f = { ...DEFAULT_FILTERS, cat: "data" as const };
+    expect(companiesQuery(f, { page: 1, per: 50 })).toBe("cat=data");
+    expect(companiesQuery(f, { page: 2, per: 25 })).toBe("cat=data&per=25&page=2");
+    expect(companiesQuery(DEFAULT_FILTERS, { page: 1, per: 50 })).toBe("");
+    // A filter change keeps the page size and resets the page.
+    expect(parsePaging(new URLSearchParams(companiesQuery({ ...f, sort: "az" }, { per: 25 })))).toEqual({ page: 1, per: 25 });
+  });
+
+  it("slices 50 per page and clamps out-of-range pages", () => {
+    const p1 = paginate(many, { page: 1, per: 50 });
+    expect(p1).toMatchObject({ page: 1, pages: 3, total: 120, from: 1, to: 50 });
+    expect(p1.rows).toHaveLength(50);
+    expect(paginate(many, { page: 3, per: 50 })).toMatchObject({ page: 3, from: 101, to: 120 });
+    expect(paginate(many, { page: 99, per: 50 })).toMatchObject({ page: 3 });
+    expect(paginate([], { page: 2, per: 50 })).toMatchObject({ page: 1, pages: 1, from: 0, to: 0, rows: [] });
+  });
+
+  it("pages follow the section order, so each page continues a section", () => {
+    const ordered = displayOrder(many);
+    expect(ordered.slice(0, 60).every((r) => r.holdsData)).toBe(true);
+    const page2 = paginate(ordered, { page: 2, per: 50 }).rows;
+    expect(groupRows(page2).map((s) => [s.key, s.rows.length])).toEqual([["data", 10], ["marketing", 40]]);
+  });
+
+  it("select-all-matching and the >25 confirmation see every page, not just the visible one", () => {
+    const refs = many.map(toMatchRef);
+    expect(Object.keys(refs[0]).sort()).toEqual(["confidence", "emailCount", "id", "name", "primaryDomain"]);
+    const plan = planBulkDecision(refs, "REMOVE");
+    expect(plan.apply).toHaveLength(90);
+    expect(plan.skippedLow).toHaveLength(30);
+    expect(plan.needsConfirm).toBe(true);
+    // A single page of 25 eligible rows would not need confirming; the whole match set does.
+    expect(planBulkDecision(paginate(refs.filter((r) => r.confidence !== "LOW"), { page: 1, per: 25 }).rows, "REMOVE").needsConfirm).toBe(false);
   });
 });
 

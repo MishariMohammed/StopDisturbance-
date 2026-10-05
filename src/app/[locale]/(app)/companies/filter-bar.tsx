@@ -10,6 +10,7 @@ import {
   DEFAULT_FILTERS,
   SEEN_FILTERS,
   SORTS,
+  companiesQuery,
   filtersToQuery,
   type Category,
   type Filters,
@@ -21,11 +22,14 @@ const SEARCH_DEBOUNCE_MS = 200;
 /** Filters live in the URL (04-ux §5.2) so back/forward and shared links restore the view. */
 export function FilterBar({
   filters,
+  per,
   counts,
   accounts,
   locale,
 }: {
   filters: Filters;
+  /** Page size is kept across filter changes; the page itself resets to 1. */
+  per: number;
   counts: Record<Category, number>;
   accounts: { id: string; address: string }[];
   locale: string;
@@ -38,7 +42,7 @@ export function FilterBar({
   const ids = useId();
 
   const href = (patch: Partial<Filters>) => {
-    const qs = filtersToQuery({ ...filters, ...patch });
+    const qs = companiesQuery({ ...filters, ...patch }, { per });
     return qs ? `${pathname}?${qs}` : pathname;
   };
 

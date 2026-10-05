@@ -3,6 +3,7 @@ import { simpleParser } from "mailparser";
 import { db } from "@/lib/db";
 import { encrypt } from "@/lib/crypto/tokens";
 import { addCalendarDays } from "@/lib/deadlines";
+import { formatLetterDate } from "@/lib/legal/drafts";
 import { findBannedPhrases } from "@/lib/legal/render";
 import { alertMessage, sendAlert } from "@/lib/notify/alerts";
 import { buildDigest, sendWeeklyDigest } from "@/lib/notify/digest";
@@ -54,12 +55,18 @@ describe("escalation packet (6c)", () => {
     expect(p.regulator.name).toContain(lang === "en" ? "SDAIA" : "سدايا");
     expect(p.deadlineInfo.length).toBeGreaterThan(10);
     expect(p.evidenceSummary.length).toBeGreaterThanOrEqual(3);
+    // The regulator can match the complaint to the request: reference SD-XXXX and the original send date.
+    expect(request.reference).toMatch(/^SD-[0-9A-HJKMNP-TV-Z]{4}$/);
+    expect(p.complaintText).toContain(request.reference);
+    expect(p.complaintText).toContain(formatLetterDate(T0, lang));
     if (lang === "en") {
+      expect(p.complaintText).toContain(`Request reference: ${request.reference}, sent ${formatLetterDate(T0, "en")}`);
       expect(p.complaintText).toContain("Marketing emails received after my request: 1");
       expect(p.complaintText).toContain("IR Art. 4");
       expect(p.evidenceSummary[0]).toContain("<orig@localhost>");
     } else {
       expect(p.complaintText).toContain("شكوى ضد: Noon Shopping");
+      expect(p.complaintText).toContain(`رقم الطلب: ${request.reference}، أُرسل بتاريخ ${formatLetterDate(T0, "ar")}`);
     }
   });
 

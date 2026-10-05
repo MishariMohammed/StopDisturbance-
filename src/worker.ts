@@ -15,6 +15,7 @@ import { pollReplies } from "@/lib/track/poll";
 import { deadlineTick } from "@/lib/track/deadline-tick";
 import { sendWeeklyDigest } from "@/lib/notify/digest";
 import { sendAlert } from "@/lib/notify/alerts";
+import { runRetention } from "@/lib/jobs/retention";
 
 // send.dispatch runs every 15 s. pg-boss cron granularity is one minute, so the worker drives it with a
 // non-overlapping setInterval loop instead of a schedule: it needs no queue round-trip, an in-flight
@@ -96,12 +97,17 @@ async function main() {
     const sent = await sendWeeklyDigest();
     logger.info({ sent }, "weekly digest");
   });
+  await boss.work(QUEUES.retention, async () => {
+    await runRetention(); // logs its own counts
+  });
   await boss.schedule(QUEUES.datasets, "17 3 * * 0", {}, { tz });
   await boss.schedule(QUEUES.syncAll, "*/10 * * * *", {}, { tz });
   // Fallback poll 5 minutes after each sync round, in case a sync job failed to enqueue it.
   await boss.schedule(QUEUES.repliesPoll, "5-59/10 * * * *", {}, { tz });
   await boss.schedule(QUEUES.deadlineTick, "0 6 * * *", {}, { tz });
   await boss.schedule(QUEUES.digest, "0 9 * * 0", {}, { tz });
+  // Retention (00-brief §4): daily 04:00 Asia/Riyadh, before the 06:00 deadline tick.
+  await boss.schedule(QUEUES.retention, "0 4 * * *", {}, { tz });
 
   let dispatching = false;
   const dispatchTimer = setInterval(async () => {
