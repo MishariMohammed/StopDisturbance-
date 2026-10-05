@@ -305,6 +305,11 @@
         "az": "A–Z"
       },
       "clear": "Clear filters"
+    },
+    "drafts": {
+      "title": "{count} companies are ready for drafts",
+      "lead": "Drafts are written from local templates. Nothing is sent until you approve each one and confirm.",
+      "create": "Create {count} drafts"
     }
   },
   "rules": {
@@ -360,6 +365,22 @@
       "sent": "Sender display names · sender domains · up to 3 redacted subject lines per company · header flags · public privacy-policy text.",
       "neverTitle": "Never sent",
       "never": "Email bodies · attachments · your name, email or phone · other contacts · OAuth tokens · ID numbers · letters."
+    },
+    "arabic": {
+      "title": "Arabic letters",
+      "current": "Arabic letter text:",
+      "on": "On — marked as reviewed by a lawyer",
+      "off": "Off — letters are sent in English (Saudi law cited in English)",
+      "warning": "Only turn this on after a Saudi lawyer has reviewed the Arabic templates and the law article numbers. Until then, letters go out in English. This applies to drafts created from now on.",
+      "check": "A lawyer has reviewed the Arabic templates — include Arabic text in letters to Saudi companies",
+      "confirm": "I confirm the review happened (needed to turn this on)",
+      "help": "Untick the first box and save to go back to English-only letters.",
+      "save": "Save Arabic setting",
+      "outcome": {
+        "saved_on": "Arabic letters are on for new drafts.",
+        "saved_off": "New drafts will be in English only.",
+        "confirm_required": "Not changed: tick the confirmation box to turn Arabic letters on."
+      }
     }
   },
   "whatWeSee": {
@@ -385,5 +406,429 @@
       "title": "You stay in control",
       "body": "Nothing is pre-selected and nothing is sent without your explicit approval. You can disconnect a mailbox or remove the app's access in your Google or Microsoft account at any time."
     }
+  },
+  "common": {
+    "copied": "Copied.",
+    "copyFailed": "Couldn't copy — select the text and copy it yourself."
+  },
+  "webForm": {
+    "title": "Submit their web form yourself",
+    "lead": "This company only takes requests through a web form. We never submit it for you.",
+    "step1": "Open their form.",
+    "open": "Open form",
+    "newTab": "(opens in a new tab)",
+    "noUrl": "We don't have a safe link to the form.",
+    "step2": "Copy each field into the form:",
+    "field": {
+      "name": "Name",
+      "email": "Email",
+      "request": "Request text"
+    },
+    "copyField": "Copy {field}",
+    "step3": "Complete any check on their page (for example a CAPTCHA) and submit.",
+    "step4": "Then tell us when you submitted it. The legal deadline starts from that date.",
+    "date": "Date you submitted it",
+    "submitted": "I submitted it"
+  },
+  "review": {
+    "title": "Review and approve",
+    "lead": "Read each request, edit it if you like, and approve it. Nothing is sent until you confirm.",
+    "created": "Created drafts for {count} companies.",
+    "skipped": {
+      "not_found": "{count} skipped: company not found.",
+      "no_decision": "{count} skipped: no decision yet.",
+      "keep": "{count} skipped: marked Keep.",
+      "open_request": "{count} skipped: a request is already open.",
+      "no_mailbox": "{count} skipped: no connected mailbox has their emails.",
+      "no_contact": "{count} skipped: needs contact — we couldn't find a privacy address or form."
+    },
+    "ownerIncomplete": "Add your name first — letters are sent in your own name.",
+    "goConnect": "Go to setup",
+    "empty": "No drafts yet. Choose companies first.",
+    "goCompanies": "Go to companies",
+    "counts": "{total} drafts · {approved} approved · {toReview} to review",
+    "view": {
+      "label": "View",
+      "one": "One by one",
+      "list": "List"
+    },
+    "queue": "Queue",
+    "state": {
+      "approved": "approved",
+      "queued": "sending",
+      "webForm": "form",
+      "oneClick": "1-click",
+      "toReview": "to review"
+    },
+    "position": "{index} of {total}",
+    "type": {
+      "ERASURE_OBJECTION": "Remove my data",
+      "STOP_MARKETING": "Stop marketing",
+      "ONE_CLICK": "Unsubscribe (one-click)",
+      "MAILTO_UNSUB": "Unsubscribe email",
+      "WEB_FORM": "Web form request",
+      "REMINDER": "Reminder",
+      "ID_REPLY": "Reply to identity request"
+    },
+    "channel": {
+      "EMAIL": "Email",
+      "MAILTO": "Unsubscribe email",
+      "ONE_CLICK": "One-click unsubscribe (RFC 8058)",
+      "WEB_FORM": "Their web form",
+      "from": "from",
+      "oneClickNote": "This stops marketing only. It doesn't delete your data.",
+      "oneClickTo": "Unsubscribe link from",
+      "alsoDelete": "Also request deletion (mark “Remove my data” on Companies)"
+    },
+    "recipient": {
+      "to": "To",
+      "source": "Source: {source}, checked {date}",
+      "unknownSource": "Source unknown — check this address.",
+      "guess": "This address is our best guess. Confirm it before approving.",
+      "confirm": "Confirm this address",
+      "confirmed": "Address confirmed.",
+      "sources": {
+        "manual": "added by you",
+        "policy": "privacy policy",
+        "llm_policy": "privacy policy (AI read)",
+        "homepage": "their website",
+        "datarequests": "datarequests.org",
+        "justdeleteme": "JustDeleteMe",
+        "headers": "email headers",
+        "domain": "guessed from their domain",
+        "guess": "guessed",
+        "sender": "their sending address"
+      }
+    },
+    "law": {
+      "title": "Law:",
+      "what": "What this means",
+      "deadline": "Deadline:",
+      "read": "Read about {law}",
+      "newTab": "(opens in a new tab)",
+      "why": "Why this law:",
+      "lowConfidence": "We're not sure about some facts, so the letter cites other laws “to the extent applicable”.",
+      "name": {
+        "PDPL": "Saudi PDPL",
+        "GDPR": "GDPR",
+        "UK_GDPR": "UK GDPR",
+        "CAN_SPAM": "CAN-SPAM",
+        "UNKNOWN": "Not sure (Saudi PDPL base)"
+      }
+    },
+    "language": "Language of letter:",
+    "lang": {
+      "en": "English",
+      "ar": "Arabic",
+      "both": "Arabic and English"
+    },
+    "lawyerFlag": "Template wording is waiting for a lawyer's review.",
+    "subject": "Subject",
+    "body": "Letter",
+    "chars": "{count} characters",
+    "diff": {
+      "show": "Show changes from template",
+      "hide": "Hide changes",
+      "unavailable": "Changes from the template can't be shown for this draft.",
+      "none": "{field}: no changes from the template.",
+      "added": "Added",
+      "removed": "Removed",
+      "legend": "Underlined green = added. Struck-through red = removed."
+    },
+    "reset": "Reset to original",
+    "resetDone": "Restored the original text.",
+    "pii": {
+      "title": "This letter includes",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "account": "Account or order number",
+      "nationalId": "National ID / Iqama",
+      "included": "included",
+      "notIncluded": "not included",
+      "idWarning": "You've added an ID number. Only share it if the company asks."
+    },
+    "warnings": {
+      "label": "Warnings",
+      "banned_phrase": "The letter says it's sent by someone on your behalf. Remove that — requests must come from you.",
+      "unfilled_placeholder": "Some template fields are still blank.",
+      "citation_removed": "Your letter no longer mentions the law. Companies take requests more seriously when it does.",
+      "reference_removed": "The subject no longer has the reference number (SD-…). We use it to match replies.",
+      "possible_id_number": "You've added an ID number. Only share it if the company asks."
+    },
+    "save": "Save changes",
+    "saved": "Saved.",
+    "savedCleared": "Saved. Your edit cleared the approval — approve it again when ready.",
+    "skip": "Skip",
+    "dontSend": "Don't send",
+    "cancelled": "{name}: request cancelled.",
+    "approve": "Approve",
+    "unapprove": "Approved — undo approval",
+    "approvedNote": "Approved. Editing the letter clears the approval.",
+    "approvedOne": "{name}: approved.",
+    "unapprovedOne": "{name}: approval removed.",
+    "queuedNote": "Sending in {seconds}s.",
+    "queuedWaiting": "Waiting for the next send slot.",
+    "cancelSend": "Cancel sending",
+    "lastError": "Last attempt failed: {error}",
+    "approvedCount": "{count} approved",
+    "sendCta": "Send {count} approved requests…",
+    "allowSending": "Allow sending",
+    "confirm": {
+      "title": "Send {count} requests?",
+      "from": "From:",
+      "needsSend": "This mailbox hasn't allowed sending yet.",
+      "oneClick": "one-click unsubscribe",
+      "webForms": "+ {count} web forms you'll submit yourself ({names})",
+      "note": "Emails will appear in your Sent folder. Once sent, they can't be recalled.",
+      "cancel": "Cancel",
+      "ok": "Send {count} requests"
+    },
+    "toast": {
+      "sending": "Sending {count} requests in {seconds}s",
+      "paused": "Paused — {count} requests wait while you're here",
+      "undo": "Undo"
+    },
+    "undone": "Sending stopped for {count} requests. They're still approved.",
+    "undoPartial": "Stopped {undone}; {missed} had already been sent.",
+    "sent": "{count} requests on their way from {mailbox}. We'll watch for replies.",
+    "goTracker": "Go to tracker",
+    "webFormRecorded": "{name}: submission recorded. The deadline starts from that date.",
+    "dismiss": "Dismiss",
+    "list": {
+      "caption": "Drafts — approve each row on its own",
+      "company": "Company",
+      "law": "Law",
+      "channel": "Channel",
+      "recipient": "Recipient",
+      "language": "Letter",
+      "approve": "Approve",
+      "approveRow": "Approve {name}",
+      "showText": "show text",
+      "submitYourself": "Submit it yourself",
+      "edit": "Edit this draft"
+    },
+    "errors": {
+      "failed": "Something went wrong. Please try again.",
+      "invalid": "That input isn't valid.",
+      "missing_recipient": "Add a recipient address first.",
+      "unfilled": "Fill in every blank template field first.",
+      "banned_phrase": "Remove wording that says someone else sends this for you.",
+      "recipient_unconfirmed": "Confirm the guessed address first.",
+      "bad_status": "This item changed state. Refresh the page.",
+      "already_sent": "This was already sent.",
+      "not_approved": "Approve it first.",
+      "not_sendable": "Web forms are submitted by you.",
+      "no_original": "The original text isn't available.",
+      "bad_date": "Pick a date that isn't in the future.",
+      "someNotQueued": "{count} could not be queued — check them and try again.",
+      "not_found": "Not found. Refresh the page."
+    }
+  },
+  "tracker": {
+    "title": "Tracker",
+    "lead": "Every request, its legal deadline and the one thing to do next.",
+    "empty": "Nothing sent yet. Requests you send appear here with their legal deadline.",
+    "emptyFilter": "No requests match these filters.",
+    "allClosed": "All {count} requests are closed. {completed} confirmed.",
+    "tabs": {
+      "label": "Status groups",
+      "all": "All",
+      "needs": "Needs you",
+      "waiting": "Waiting",
+      "overdue": "Overdue",
+      "completed": "Completed",
+      "escalated": "Escalated",
+      "closed": "Stopped"
+    },
+    "search": "Search company or reference",
+    "sort": "Sort",
+    "sortOpt": {
+      "deadline": "Deadline",
+      "company": "Company",
+      "recent": "Most recent"
+    },
+    "apply": "Apply",
+    "status": {
+      "DRAFT": "Draft",
+      "APPROVED": "Approved",
+      "QUEUED": "Sending",
+      "SENT": "Sent",
+      "ACKNOWLEDGED": "Acknowledged",
+      "NEEDS_ACTION": "Needs your reply",
+      "COMPLETED": "Completed",
+      "REFUSED": "Refused",
+      "OVERDUE": "Overdue",
+      "ESCALATED": "Escalated",
+      "FAILED": "Not sent",
+      "CANCELLED": "Stopped tracking"
+    },
+    "flags": {
+      "extension": "Extension claimed",
+      "stillEmailing": "Still emailing you",
+      "bounced": "Bounced"
+    },
+    "deadline": {
+      "left": "{count} days left · due {date}",
+      "overdue": "{count} days past the legal deadline · was due {date}",
+      "businessDays": "10 business days",
+      "extendedFrom": "extended from",
+      "hijri": "Hijri: {date}",
+      "none": "No deadline yet"
+    },
+    "sent": "Sent {date}",
+    "lastReply": "Reply {date}",
+    "next": "Next:",
+    "open": "Details",
+    "type": {
+      "ERASURE_OBJECTION": "Remove my data",
+      "STOP_MARKETING": "Stop marketing",
+      "ONE_CLICK": "Unsubscribe (one-click)",
+      "MAILTO_UNSUB": "Unsubscribe email",
+      "WEB_FORM": "Web form request"
+    },
+    "reasons": {
+      "NEEDS_ID": "They asked to verify your identity. Only share what's needed.",
+      "ID": "They asked to verify your identity. Only share what's needed.",
+      "SEND_PERMISSION": "We can't send from {mailbox} yet: allow sending for this mailbox.",
+      "WEB_FORM": "They asked you to use their web form.",
+      "WEB_FORM_REDIRECT": "They asked you to use their web form.",
+      "MORE_INFO": "They asked for more information.",
+      "BOUNCED": "The email bounced. Check the address.",
+      "OTHER": "Something needs your attention.",
+      "ID_VERIFICATION": "They asked to verify your identity. Only share what's needed."
+    },
+    "errors": {
+      "failed": "Something went wrong. Please try again.",
+      "invalid": "That input isn't valid.",
+      "bad_date": "Pick a date that isn't in the future.",
+      "bad_status": "This request changed state. Refresh the page.",
+      "already_sent": "It was already sent — it can't be cancelled.",
+      "not_queued": "It isn't waiting to be sent any more.",
+      "limit_reached": "Only one reminder is allowed.",
+      "too_early": "It's too early for that.",
+      "not_supported": "That isn't possible for this request.",
+      "not_found": "Not found. Refresh the page.",
+      "no_mailbox": "No connected mailbox for this request."
+    },
+    "detail": {
+      "back": "All requests",
+      "law": "Law",
+      "channel": "Channel",
+      "mailbox": "Sent from",
+      "reference": "Reference",
+      "deadline": "Deadline",
+      "complaintWindow": "You can complain to SDAIA until {date}.",
+      "timeline": "Timeline",
+      "replies": "Replies",
+      "noReplies": "No replies yet.",
+      "matched": "Matched: {method}",
+      "from": "From",
+      "showFull": "Show full reply",
+      "suggested": "Looks like: {cls}",
+      "confirmQ": "Update the status to match?",
+      "yes": "Yes, update status",
+      "no": "No — not related",
+      "other": "Something else",
+      "extensionDate": "Date of their extension notice",
+      "extensionSave": "Record extension",
+      "extensionTitle": "They claimed an extension",
+      "evidence": "Download evidence (ZIP)",
+      "evidenceHelp": "Copies of the sent email, replies and a timeline — for a complaint.",
+      "more": "More actions",
+      "markCompleted": "Mark completed",
+      "markRefused": "Mark refused",
+      "stop": "Stop tracking",
+      "closeConfirm": "Are you sure? This closes the request.",
+      "webFormLater": "Submitted their web form? Record the date",
+      "done": "Saved.",
+      "loadFull": "Load full reply"
+    },
+    "cls": {
+      "ACKNOWLEDGED": "acknowledgement",
+      "COMPLETED": "they confirmed it's done",
+      "REFUSED": "refusal",
+      "NEEDS_ID": "asks for ID verification",
+      "EXTENSION": "extension notice",
+      "NOT_RELATED": "not related"
+    },
+    "method": {
+      "THREAD": "reply in the same thread",
+      "IN_REPLY_TO": "reply to our email",
+      "SUBJECT_TOKEN": "reference number in the subject",
+      "DOMAIN": "same company domain (probable)",
+      "thread": "reply in the same thread"
+    },
+    "action": {
+      "REVIEW_DRAFT": "Review draft",
+      "SEND": "Send",
+      "CANCEL_QUEUED": "Cancel sending",
+      "WAIT": "Nothing to do — we'll tell you when they reply.",
+      "NONE": "Nothing to do.",
+      "CONFIRM_REPLY": "Check their reply",
+      "REPLY_ID": "Reply with details",
+      "OPEN_FORM": "Open their web form",
+      "WEB_FORM_SUBMITTED": "Record when you submitted the form",
+      "GRANT_SEND": "Allow sending",
+      "SEND_REMINDER": "Send reminder",
+      "ESCALATE": "File a complaint with {regulator}…",
+      "ADD_COMPLAINT_REF": "Add complaint reference",
+      "FIX_ADDRESS": "Fix the address",
+      "VIEW_REPLY": "View reply",
+      "REVIEW_FOLLOW_UP": "Review the follow-up draft",
+      "CLOSE": "Close the request",
+      "RECONNECT": "Reconnect mailbox"
+    },
+    "wizard": {
+      "title": "File a complaint yourself",
+      "lead": "We never file anything for you. Here is what you need; you file it on the regulator's site.",
+      "step1": "1. Regulator",
+      "step2": "2. Complaint text",
+      "step3": "3. Evidence",
+      "step4": "4. File it and tell us",
+      "open": "Open {name} portal",
+      "newTab": "(opens in a new tab)",
+      "copy": "Copy complaint text",
+      "language": "Complaint language",
+      "loading": "Preparing the complaint…",
+      "refLabel": "Complaint reference number (optional)",
+      "filed": "I filed it",
+      "close": "Close",
+      "deadlineInfo": "Deadline"
+    },
+    "events": {
+      "DRAFT_CREATED": "Drafted",
+      "DRAFT_EDITED": "Edited",
+      "DRAFT_ORIGINAL": "Original text saved",
+      "APPROVED": "Approved",
+      "APPROVAL_REVOKED": "Approval cleared",
+      "QUEUED": "Queued to send",
+      "UNDO": "Sending cancelled",
+      "SENT": "Sent",
+      "SEND_FAILED": "Send failed",
+      "BOUNCED": "Bounced",
+      "NEEDS_SEND_PERMISSION": "Waiting for send permission",
+      "SEND_PERMISSION_GRANTED": "Send permission granted",
+      "WEB_FORM_SUBMITTED": "Web form submitted",
+      "REPLY_RECEIVED": "Reply received",
+      "REPLY_CONFIRMED": "Reply confirmed",
+      "REPLY_REJECTED": "Marked not a reply",
+      "AUTO_ACKNOWLEDGED": "Auto-acknowledgement",
+      "AUTO_COMPLETED": "Completed automatically",
+      "EXTENSION_RECORDED": "Extension recorded",
+      "DEADLINE_SOON": "Deadline soon",
+      "OVERDUE": "Deadline passed",
+      "REMINDER_OFFERED": "Reminder offered",
+      "ESCALATION_OPEN": "Escalation possible",
+      "ESCALATED": "Complaint filed",
+      "CLOSED": "Closed"
+    },
+    "actor": {
+      "OWNER": "you",
+      "SYSTEM": "app"
+    },
+    "availableFrom": "Available from {date}",
+    "reminderFrom": "Reminder available from {date}",
+    "sdaia": "SDAIA"
   }
 }

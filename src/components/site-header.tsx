@@ -12,8 +12,8 @@ export async function SiteHeader({ locale, nav = false }: { locale: string; nav?
     { href: `${base}/connect`, label: t("connect") },
     { href: `${base}/scan`, label: t("scan") },
     { href: `${base}/companies`, label: t("companies") },
-    { href: `${base}/review`, label: t("review"), disabled: true, note: t("soon") },
-    { href: `${base}/tracker`, label: t("tracker"), disabled: true, note: t("soon") },
+    { href: `${base}/review`, label: t("review") },
+    { href: `${base}/tracker`, label: t("tracker") },
     { href: `${base}/settings`, label: t("settings") },
   ];
   return (

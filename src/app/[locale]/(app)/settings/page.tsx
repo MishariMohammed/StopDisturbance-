@@ -3,11 +3,14 @@ import { requireOwner } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { getAiMode, getOptOutConfirmedAt } from "@/lib/llm/gate";
 import { formatDate } from "@/lib/format";
-import { saveAiModeAction } from "./actions";
+import { db } from "@/lib/db";
+import { ARABIC_REVIEWED_KEY } from "@/lib/legal/drafts";
+import { saveAiModeAction, saveArabicReviewAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 const OUTCOMES = ["saved_rules", "saved_deepseek", "opt_out_required", "bad_date"] as const;
+const ARABIC_OUTCOMES = ["saved_on", "saved_off", "confirm_required"] as const;
 
 export default async function SettingsPage({
   params,
@@ -20,7 +23,13 @@ export default async function SettingsPage({
   const sp = await searchParams;
   await requireOwner(locale);
   const t = await getTranslations("settings");
-  const [mode, optOut] = await Promise.all([getAiMode(), getOptOutConfirmedAt()]);
+  const [mode, optOut, arabicSetting] = await Promise.all([
+    getAiMode(),
+    getOptOutConfirmedAt(),
+    db.setting.findUnique({ where: { key: ARABIC_REVIEWED_KEY } }),
+  ]);
+  const arabicReviewed = arabicSetting?.value === true;
+  const arabicOutcome = ARABIC_OUTCOMES.find((o) => o === sp.arabic);
   const key = env().DEEPSEEK_API_KEY;
   const outcome = OUTCOMES.find((o) => o === sp.ai);
   const failed = outcome === "opt_out_required" || outcome === "bad_date";
@@ -99,6 +108,36 @@ export default async function SettingsPage({
             <dd>{t("ai.never")}</dd>
           </dl>
         </details>
+      </section>
+
+      <section id="arabic" aria-labelledby="arabic-title" className="mt-8 rounded-lg border border-border bg-surface p-4 sm:p-6">
+        <h2 id="arabic-title" className="text-xl font-semibold">{t("arabic.title")}</h2>
+        <p className="mt-1 text-sm">
+          {t("arabic.current")} <strong>{arabicReviewed ? t("arabic.on") : t("arabic.off")}</strong>
+        </p>
+        {arabicOutcome &&
+          (arabicOutcome === "confirm_required" ? (
+            <p role="alert" className="mt-3 rounded-md bg-danger-bg p-3 text-sm text-danger">{t(`arabic.outcome.${arabicOutcome}`)}</p>
+          ) : (
+            <p role="status" className="mt-3 rounded-md bg-success-bg p-3 text-sm text-success">{t(`arabic.outcome.${arabicOutcome}`)}</p>
+          ))}
+        <p id="arabic-warning" className="mt-3 rounded-md bg-warning-bg p-3 text-sm text-warning">
+          <span aria-hidden="true">⚠ </span>
+          {t("arabic.warning")}
+        </p>
+        <form action={saveArabicReviewAction} className="mt-4 space-y-3">
+          <input type="hidden" name="locale" value={locale} />
+          <label className="flex min-h-tap items-start gap-2">
+            <input type="checkbox" name="arabicReviewed" defaultChecked={arabicReviewed} aria-describedby="arabic-warning" className="mt-1 size-5 shrink-0" />
+            <span>{t("arabic.check")}</span>
+          </label>
+          <label className="flex min-h-tap items-start gap-2">
+            <input type="checkbox" name="arabicConfirm" className="mt-1 size-5 shrink-0" />
+            <span>{t("arabic.confirm")}</span>
+          </label>
+          <p className="text-sm text-muted">{t("arabic.help")}</p>
+          <button type="submit" className="min-h-tap rounded-md bg-primary px-4 py-2 font-medium text-primary-fg">{t("arabic.save")}</button>
+        </form>
       </section>
     </main>
   );

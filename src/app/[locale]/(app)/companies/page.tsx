@@ -5,7 +5,9 @@ import { loadCompanies } from "@/lib/companies/load";
 import { applyFilters, categoryCounts, groupRows, parseFilters } from "@/lib/companies/filters";
 import { overallPercent, toAccountScan } from "@/lib/companies/scan-status";
 import { formatNumber } from "@/lib/format";
+import { draftableCompanyIds } from "@/lib/review/load";
 import { FilterBar } from "./filter-bar";
+import { createDraftsAction } from "./actions";
 import { CompanyList } from "./company-list";
 
 export const dynamic = "force-dynamic";
@@ -21,13 +23,14 @@ export default async function CompaniesPage({
   await requireOwner(locale);
   const t = await getTranslations("companies");
   const filters = parseFilters(await searchParams);
-  const [all, accountRows] = await Promise.all([
+  const [all, accountRows, draftable] = await Promise.all([
     loadCompanies(),
     db.mailAccount.findMany({
       where: { status: { not: "DISCONNECTED" } },
       orderBy: { createdAt: "asc" },
       select: { id: true, address: true, provider: true, status: true, scanProgress: true },
     }),
+    draftableCompanyIds(),
   ]);
   const rows = applyFilters(all, filters, { locale });
   const counts = categoryCounts(all, filters);
@@ -44,6 +47,20 @@ export default async function CompaniesPage({
         <p role="status" className="mt-4 rounded-md bg-info-bg p-3 text-sm text-info">
           {percent === null ? t("stillScanning") : t("stillScanningPct", { percent: formatNumber(locale, percent) })}
         </p>
+      )}
+      {draftable.length > 0 && (
+        <section aria-labelledby="drafts-title" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary bg-surface p-4">
+          <div>
+            <h2 id="drafts-title" className="font-semibold">{t("drafts.title", { count: formatNumber(locale, draftable.length) })}</h2>
+            <p className="text-sm text-muted">{t("drafts.lead")}</p>
+          </div>
+          <form action={createDraftsAction}>
+            <input type="hidden" name="locale" value={locale} />
+            <button type="submit" className="min-h-tap rounded-md bg-primary px-4 font-medium text-primary-fg">
+              {t("drafts.create", { count: formatNumber(locale, draftable.length) })}
+            </button>
+          </form>
+        </section>
       )}
       <FilterBar filters={filters} counts={counts} accounts={accounts} locale={locale} />
       {all.length === 0 ? (

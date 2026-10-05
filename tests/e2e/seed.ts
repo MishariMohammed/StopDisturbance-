@@ -2,6 +2,7 @@
 // confidence), one company without evidence (must never render) and one personal sender.
 // Run directly with `npx tsx tests/e2e/seed.ts`, or via Playwright's global setup.
 import { PrismaClient, type Confidence } from "@prisma/client";
+import { E2E_OWNER, seedRequests } from "./seed-requests";
 
 const NAMES: [string, string][] = [
   ["Noon", "noon.com"], ["مكتبة جرير", "jarir.com"], ["Shein", "shein.com"], ["Careem", "careem.com"],
@@ -16,7 +17,7 @@ const NAMES: [string, string][] = [
   ["Udemy", "udemy.com"], ["Coursera", "coursera.org"], ["Medium", "medium.com"], ["Noon UAE", "noon.ae"],
 ];
 
-export const E2E = { companies: NAMES.length, gmail: "you@gmail.com", outlook: "you@outlook.com" };
+export const E2E = { companies: NAMES.length, gmail: "you@gmail.com", outlook: "you@outlook.com", ownerName: E2E_OWNER };
 
 const confidenceFor = (i: number): Confidence => (i % 4 === 3 ? "LOW" : i % 4 === 1 ? "MEDIUM" : "HIGH");
 const DAY = 24 * 3600 * 1000;
@@ -25,6 +26,10 @@ export async function seed(db = new PrismaClient()) {
   const url = process.env.DATABASE_URL ?? "";
   if (!/@(localhost|127\.0\.0\.1)[:/]/.test(url)) throw new Error("E2E seed refuses to run against a non-local database");
   await db.$transaction([
+    db.inboundReply.deleteMany(),
+    db.evidenceHeader.deleteMany(),
+    db.requestEvent.deleteMany(),
+    db.outboundMessage.deleteMany(),
     db.classification.deleteMany(),
     db.decision.deleteMany(),
     db.companyContact.deleteMany(),
@@ -36,7 +41,7 @@ export async function seed(db = new PrismaClient()) {
     db.setting.deleteMany(),
     db.owner.deleteMany(),
   ]);
-  await db.owner.create({ data: { id: "owner", loginEmails: [E2E.gmail, E2E.outlook] } });
+  await db.owner.create({ data: { id: "owner", fullName: E2E.ownerName, loginEmails: [E2E.gmail, E2E.outlook] } });
   await db.setting.create({ data: { key: "aiMode", value: "RULES" } });
 
   const now = Date.now();
@@ -55,12 +60,14 @@ export async function seed(db = new PrismaClient()) {
     },
   });
 
+  const ids: Record<string, string> = {};
   for (const [i, [name, domain]] of NAMES.entries()) {
     const ads = i % 3 !== 2;
     const data = i % 3 !== 1;
     const confidence = confidenceFor(i);
     const msgs = 400 - i * 9;
     const company = await db.company.create({ data: { name, primaryDomain: domain, sendsAds: ads, holdsData: data, confidence } });
+    ids[domain] = company.id;
     await db.companyDomain.create({ data: { domain, companyId: company.id, source: "psl" } });
     const sender = await db.sender.create({
       data: {
@@ -91,6 +98,7 @@ export async function seed(db = new PrismaClient()) {
   await db.sender.create({
     data: { registrableDomain: "friend@gmail.com", isPersonal: true, msgCount: 12, firstSeen: new Date(now - 100 * DAY), lastSeen: new Date(now - DAY), accountIds: [gmail.id] },
   });
+  await seedRequests(db, ids, { gmail: gmail.id, outlook: outlook.id });
   await db.$disconnect();
 }
 
